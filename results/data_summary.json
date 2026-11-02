@@ -1,0 +1,68 @@
+{
+  "total": {
+    "rows": 77315,
+    "phishing": 32544,
+    "benign": 44771,
+    "phishing_fraction": 0.4209
+  },
+  "splits": {
+    "train": {
+      "rows": 55664,
+      "phishing": 23431,
+      "benign": 32233,
+      "phishing_fraction": 0.4209
+    },
+    "val": {
+      "rows": 6185,
+      "phishing": 2603,
+      "benign": 3582,
+      "phishing_fraction": 0.4209
+    },
+    "test": {
+      "rows": 15466,
+      "phishing": 6510,
+      "benign": 8956,
+      "phishing_fraction": 0.4209
+    }
+  },
+  "type_guess_note": "heuristic from src/data.py:guess_type (html tag / single-token URL / other text)",
+  "type_guess_counts": {
+    "total": {
+      "html": 15747,
+      "text": 20188,
+      "url": 41380
+    },
+    "train": {
+      "html": 11313,
+      "text": 14493,
+      "url": 29858
+    },
+    "val": {
+      "html": 1282,
+      "text": 1654,
+      "url": 3249
+    },
+    "test": {
+      "html": 3152,
+      "text": 4041,
+      "url": 8273
+    }
+  },
+  "text_length_chars": {
+    "count": 77315.0,
+    "mean": 6769.1,
+    "std": 63468.1,
+    "min": 1.0,
+    "50%": 80.0,
+    "90%": 25256.4,
+    "99%": 80128.6,
+    "max": 17036692.0
+  },
+  "quality_checks": {
+    "test_rows_exact_text_in_train_json": 22,
+    "test_rows_normalised_text_in_train_json": 68,
+    "duplicate_texts_within_train_json": 74,
+    "duplicate_texts_within_test_json": 12,
+    "note": "Overlapping test rows are kept so the test set stays identical to the author's; the count is reported as a limitation."
+  }
+}

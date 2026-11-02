@@ -1,0 +1,49 @@
+{
+  "source": {
+    "dataset": "ealvaradob/phishing-dataset",
+    "revision": "23b8c17f4c9438c3e5d7729be349db049614a266",
+    "revision_date": "2023-12-27 (dataset licence at this revision: MIT)",
+    "files": {
+      "train": {
+        "file": "train.json",
+        "sha256": "e2e959e3962766c8f917a9fdf76156d6e3b41ce9458eef56deed7830212de15b"
+      },
+      "test": {
+        "file": "test.json",
+        "sha256": "1f5e51ea099f3d2a24754243e08cbdf023b72d77e1eaa2217d2cc1f0ebc590f9"
+      }
+    },
+    "why_this_revision": "train.json is the published model's training set (row count matches model-card steps/epoch); test.json is its held-out set. Later combined_reduced.json re-sampled URLs."
+  },
+  "procedure": {
+    "test": "test.json unchanged, in published order",
+    "train_val": "train_test_split(train.json, test_size=0.1, stratify=label, random_state=42)",
+    "content_sha256": "sha256 over 'source_file<TAB>row_id<TAB>label<TAB>text<NEWLINE>' for each row in split order"
+  },
+  "splits": {
+    "train": {
+      "file": "data/splits/train.parquet",
+      "rows": 55664,
+      "file_sha256": "05e529a63638ad55fe374fa002db4e1daa453d485d62a45e494a5d0cdab32005",
+      "content_sha256": "a43112d863d6208e0b030ef99d2e44f04fd1e9582e77217f04b2350ee41ee8df"
+    },
+    "val": {
+      "file": "data/splits/val.parquet",
+      "rows": 6185,
+      "file_sha256": "7bd6d8ebd55fe7029335659b9833ddbe46ee253798ffbb69a75200878c5aa473",
+      "content_sha256": "7f88fb680d036ad85f37d9df32023b8b962ee6bbc8236651378b004ea573ecc3"
+    },
+    "test": {
+      "file": "data/splits/test.parquet",
+      "rows": 15466,
+      "file_sha256": "f00e226f2af1caa8e42ddf5461fec7b075f5d6e2833b0784fbc6b7e2cc9c8f5c",
+      "content_sha256": "248825a264bf7e9569442b817b8adb1e3f4d827b42433ec865588f672a790506"
+    }
+  },
+  "provenance_check": {
+    "train_json_rows": 61849,
+    "implied_steps_per_epoch_batch16": 3866,
+    "model_card_steps_per_epoch": 3866,
+    "matches_model_card": true
+  }
+}

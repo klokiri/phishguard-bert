@@ -7,7 +7,7 @@
 |---|---|---|
 | 0 Recon and repo setup | done | `phase-0-recon` |
 | 1 Restructure and environment | done | `phase-1-env` |
-| 2 Data | not started | |
+| 2 Data | done | `phase-2-data` |
 | 3 Evaluation and baselines | not started | |
 | 4 BERT | not started | |
 | 5 Backend | not started | |
@@ -160,6 +160,42 @@ Also: the per-domain results in the classifier notebook (`texts`, `urls`, `webs`
 - Extra test (scratch script, not committed): HF `Trainer` ran 4 steps on a tiny random BERT on `mps` with `fp32`, `fp16=True` and `bf16=True` — all three ran. Whether fp16 is numerically stable at bert-base scale is **checked in Phase 4**, not assumed.
 
 **Note on the definition of done:** it says "`check_env.py` shows the GPU detected". On this machine that means MPS = True, not CUDA = True.
+
+---
+
+## Phase 2 — Data (2026-11-02)
+
+### The split question from Phase 0 §5b is resolved
+
+1. Applying the author's recipe (`train_test_split(test_size=0.2, stratify, random_state=42)`) to today's `combined_reduced.json` gives 77,677 rows → 62,141 train (3,884 steps/epoch) / 15,536 test. This matches **neither** the model card (3,866 steps/epoch) nor the classifier notebook (15,417 test rows).
+2. The Hub commit history explains it. The model's final training runs are dated 2023-12-27 22:16–23:08 UTC (model repo commits `ecbff15e`…`a14076d9`, then "load 4 epochs model (best results)"). At that time the dataset (revision `23b8c17f`, 2023-12-27 19:11 UTC) contained a pre-made `train.json` + `test.json`. `combined_reduced.json` was uploaded later, on 2024-01-31.
+3. **Verified:** `train.json` at `23b8c17f` has **61,849 rows → 3,866 steps/epoch at batch 16 — an exact match with the model card.** So this `train.json` is the published model's training set and the matching `test.json` (15,466 rows) is its held-out set.
+4. Today's file keeps nearly the same emails/SMS (19,114 of 20,184 match after normalising case/whitespace) and HTML (12,624 of 15,745), but only 2,140 of its 41,748 URLs appear in the old files: the 5% URL sample was re-drawn (the author's URL shuffle had no seed).
+5. Consequence: on a split of today's file, **5,986 of 15,536 test rows (38.5%) are in the published model's training data** (normalised match). Evaluating the model there would be heavily inflated.
+
+**Decision (Kasim, 2026-11-02):** use the original split at revision `23b8c17f4c9438c3e5d7729be349db049614a266` for **every** model. test = `test.json` unchanged; train/val = `train.json` split 90/10, stratified, seed 42.
+
+What this means for the report:
+- The pre-trained model gets a **genuinely held-out** test set (its own). Caveat: the author used this test set during training for per-epoch evaluation and to pick the best checkpoint (`eval_dataset=test`, `load_best_model_at_end=True`), so its score on it is still slightly optimistic. Our own models never see the test set before final evaluation.
+- The author's classifier-notebook figures (Phase 0 §5d) were computed on a different dataset version (15,417 test rows), so they are **not** directly comparable with our results; cite them only as author-reported context.
+- The dataset licence at this revision is **MIT** (it became Apache-2.0 later); both permit this use. NOTICE updated.
+
+### Result (`.venv/bin/python -m src.data`)
+
+| Split | Rows | Phishing | Benign | Phishing fraction |
+|---|---|---|---|---|
+| train | 55,664 | 23,431 | 32,233 | 0.4209 |
+| val | 6,185 | 2,603 | 3,582 | 0.4209 |
+| test | 15,466 | 6,510 | 8,956 | 0.4209 |
+
+(read from `results/data_summary.json`)
+
+- Both downloaded files pass their SHA-256 checks; `split_manifest.json` records file and content hashes. Running the script twice gives an identical manifest (verified with `diff`).
+- Sample types (heuristic `guess_type`, test set): 8,273 URL, 4,041 text (email/SMS), 3,152 HTML.
+- Text length is extremely skewed: median 80 characters, 90th percentile 25,256, maximum 17,036,692 (one huge HTML page). Phase 4 must choose `max_length` from token statistics, and Phase 3's feature extraction must cope with very long inputs.
+- **Limitation (kept, reported):** 22 test rows have an exact duplicate text in `train.json` (68 after normalising case and whitespace = 0.44% of test). They are kept so the test set stays identical to the author's.
+- `data/raw/combined_reduced.json` (497 MB, git-ignored) was downloaded during the investigation and is no longer used. It can be deleted.
+- The test set (15,466 rows) satisfies the proposal's "held-out test set of at least 10,000 labelled samples".
 
 ---
 

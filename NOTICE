@@ -14,7 +14,10 @@ This project includes and builds on third-party work:
     source, licence, commit and the changes made.
   - The data split and baseline setup follow the author's notebooks.
 
-  Dataset: ealvaradob/phishing-dataset (Hugging Face), Apache-2.0
+  Dataset: ealvaradob/phishing-dataset (Hugging Face). This project uses
+           train.json/test.json at revision
+           23b8c17f4c9438c3e5d7729be349db049614a266, licensed MIT at that
+           revision (the dataset is Apache-2.0 in later revisions).
   Model:   ealvaradob/bert-finetuned-phishing (Hugging Face), Apache-2.0
 
 The full licence text is in third_party/LICENSE-EstAlvB.md. You may not use
