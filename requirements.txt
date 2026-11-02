@@ -1,0 +1,44 @@
+# PhishGuard BERT — Python dependencies
+#
+# Verified to install together and import on 2026-11-02:
+#   macOS 26.5.1 arm64 (Apple M4 Pro), Python 3.12.12, created with:
+#     uv python install 3.12
+#     uv venv --python 3.12 .venv
+#     uv pip install --python .venv/bin/python -r requirements.txt
+#   then checked with:  .venv/bin/python scripts/check_env.py
+#
+# Versions are pinned (==) so results can be reproduced with the same software.
+#
+# PyTorch: on Apple Silicon the normal PyPI wheel includes the MPS (Metal) GPU
+# backend, so no special index URL is needed. On a Windows/Linux NVIDIA machine,
+# install torch from https://pytorch.org/get-started/locally/ for your CUDA
+# version first, then install the rest of this file.
+#
+# System requirement on macOS: xgboost needs the OpenMP runtime:
+#     brew install libomp
+
+# --- Deep learning / Hugging Face ---
+torch==2.15.0
+transformers==5.22.1
+accelerate==1.15.0
+huggingface_hub==2.4.0
+
+# --- Classical ML and data ---
+scikit-learn==1.9.1
+xgboost==3.4.1
+numpy==2.5.4
+pandas==3.1.0
+pyarrow==26.0.0          # parquet files for data/splits/
+matplotlib==3.11.2
+tqdm==4.70.1
+
+# --- Feature extraction (reference features.py imports pyquery at module level) ---
+pyquery==2.1.0
+
+# --- Backend ---
+flask==3.1.3
+flask-cors==6.0.5
+
+# --- Tests ---
+pytest==9.2.0
+pytest-cov==7.1.0

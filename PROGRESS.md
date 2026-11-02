@@ -6,7 +6,7 @@
 | Phase | Status | Tag |
 |---|---|---|
 | 0 Recon and repo setup | done | `phase-0-recon` |
-| 1 Restructure and environment | not started | |
+| 1 Restructure and environment | done | `phase-1-env` |
 | 2 Data | not started | |
 | 3 Evaluation and baselines | not started | |
 | 4 BERT | not started | |
@@ -138,6 +138,28 @@ Also: the per-domain results in the classifier notebook (`texts`, `urls`, `webs`
 - **F1 definition (proposed, confirm in Phase 3):** binary F1 for the phishing class (label 1), matching the author's binary precision/recall. Weighted F1 can be shown as a secondary column, clearly labelled.
 - Test set = author's 20% split, frozen once in Phase 2 and used for every model.
 - Thresholds will live in one config file (Phase 5).
+
+---
+
+## Phase 1 — Restructure and environment (2026-11-02)
+
+**Restructure** (commit `9d08825`, `git mv` only, 0 content changes):
+`PhishGuard_AI.html` → `frontend/`; `PhishGuard_BERT/frontend-patch/bert_connector.js` → `frontend/`; `PhishGuard_BERT/backend/app.py` → `backend/`. The rest of the scaffold stays in `PhishGuard_BERT/` until Phase 7.
+
+**Environment**
+- Python 3.12.12 installed with `uv python install 3.12`; venv at `.venv` (`uv venv --python 3.12 .venv`).
+- `requirements.txt` pins the direct dependencies. Verified twice: in `.venv`, and in a throw-away fresh venv built only from `requirements.txt`; both pass `scripts/check_env.py` (exit code 0).
+- Key versions: torch 2.15.0, transformers 5.22.1, accelerate 1.15.0, scikit-learn 1.9.1, xgboost 3.4.1, pandas 3.1.0.
+- **System dependency:** xgboost failed to import until `brew install libomp` (OpenMP runtime). Documented in `requirements.txt` and README.
+- `transformers` 5.x / `datasets` not installed: Phase 2 reads `combined_reduced.json` with pandas, so the loading-script problem in `datasets` 4.x does not arise.
+
+**GPU check** (`.venv/bin/python scripts/check_env.py`):
+- `torch.cuda.is_available()` = False (expected, no NVIDIA); `torch.backends.mps.is_available()` = True.
+- 256×256 matmul on MPS matches the CPU result.
+- autocast float16 and bfloat16 both work on MPS (forward + backward of a linear layer).
+- Extra test (scratch script, not committed): HF `Trainer` ran 4 steps on a tiny random BERT on `mps` with `fp32`, `fp16=True` and `bf16=True` — all three ran. Whether fp16 is numerically stable at bert-base scale is **checked in Phase 4**, not assumed.
+
+**Note on the definition of done:** it says "`check_env.py` shows the GPU detected". On this machine that means MPS = True, not CUDA = True.
 
 ---
 

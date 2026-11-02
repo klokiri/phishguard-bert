@@ -14,3 +14,15 @@ This log records the work generated or changed by an AI assistant (Claude Code, 
 | `AI_ASSISTANCE_LOG.md` | This file | see `git log -- AI_ASSISTANCE_LOG.md` |
 
 Also done by the AI in Phase 0 (no files): checked the environment, read the four reference notebooks and `features.py`, read the proposal text, ran a secret scan, created the GitHub repo `klokiri/phishguard-bert` (public, as Kasim chose) and pushed.
+
+## Phase 1 — Restructure and environment (2026-11-02)
+
+| File | What it is | Commit |
+|---|---|---|
+| `frontend/PhishGuard_AI.html`, `frontend/bert_connector.js`, `backend/app.py` | Moved with `git mv`, content unchanged | `9d08825` |
+| `scripts/check_env.py` | Prints library versions, detects CUDA/MPS, runs a GPU matmul check and a mixed-precision check | see `git log -- scripts/check_env.py` |
+| `requirements.txt` | Pinned dependencies, verified in a fresh venv | see `git log -- requirements.txt` |
+| `NOTICE`, `third_party/LICENSE-EstAlvB.md` | Attribution; licence copied verbatim from the reference repo | see `git log -- NOTICE` |
+| `README.md`, `PROGRESS.md`, `AI_ASSISTANCE_LOG.md` | Setup steps, Phase 1 findings, this log | see `git log` |
+
+Also done by the AI (no committed files): installed Python 3.12 via uv, created `.venv`, installed `libomp` with Homebrew, ran a throw-away HF `Trainer` precision test on MPS.
