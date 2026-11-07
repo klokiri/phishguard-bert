@@ -1,0 +1,96 @@
+{
+  "model": "bert_pretrained",
+  "test_set": "data/splits/test.parquet (see results/split_manifest.json)",
+  "decision_rule": "phishing if score >= 0.5",
+  "accuracy": 0.9716,
+  "precision": 0.9656,
+  "recall": 0.967,
+  "f1": 0.9663,
+  "f1_weighted": 0.9716,
+  "fpr": 0.025,
+  "roc_auc": 0.9944,
+  "confusion_matrix": {
+    "tn": 8732,
+    "fp": 224,
+    "fn": 215,
+    "tp": 6295
+  },
+  "n": 15466,
+  "latency_ms_per_sample": 17.7278,
+  "by_type": {
+    "html": {
+      "accuracy": 0.9385,
+      "precision": 0.8958,
+      "recall": 0.9317,
+      "f1": 0.9134,
+      "f1_weighted": 0.9387,
+      "fpr": 0.0579,
+      "roc_auc": 0.9786,
+      "confusion_matrix": {
+        "tn": 1935,
+        "fp": 119,
+        "fn": 75,
+        "tp": 1023
+      },
+      "n": 3152
+    },
+    "text": {
+      "accuracy": 0.9889,
+      "precision": 0.9889,
+      "recall": 0.9819,
+      "f1": 0.9854,
+      "f1_weighted": 0.9889,
+      "fpr": 0.0068,
+      "roc_auc": 0.9989,
+      "confusion_matrix": {
+        "tn": 2476,
+        "fp": 17,
+        "fn": 28,
+        "tp": 1520
+      },
+      "n": 4041
+    },
+    "url": {
+      "accuracy": 0.9758,
+      "precision": 0.9771,
+      "recall": 0.971,
+      "f1": 0.974,
+      "f1_weighted": 0.9758,
+      "fpr": 0.02,
+      "roc_auc": 0.9954,
+      "confusion_matrix": {
+        "tn": 4321,
+        "fp": 88,
+        "fn": 112,
+        "tp": 3752
+      },
+      "n": 8273
+    }
+  },
+  "git_commit": "6115ee76c91a515afbfcb1deb0159e102d3d4774",
+  "details": {
+    "description": "ealvaradob/bert-finetuned-phishing @ fa8fb73a007174c410ab7160d4e4c6e6b8d998d4 (Esteban Alvarado; bert-large-uncased fine-tuned, 336M parameters). Inference only, no training by us.",
+    "independence": "Test set = held-out test.json of the dataset revision the model was trained on (not in its training data). The author used this test set for per-epoch evaluation and best-checkpoint selection, so the score is slightly optimistic. 22 test rows have an exact duplicate in train.json.",
+    "author_reported_on_same_test_set": {
+      "source": "HF model card, epoch 4",
+      "accuracy": 0.9717,
+      "precision": 0.9658,
+      "recall": 0.967,
+      "false_positive_rate": 0.0249
+    },
+    "inference": "device mps, float16=True, batch 32, truncation to 512 tokens, length-sorted batches",
+    "fp16_vs_fp32_check": {
+      "rows": 400,
+      "max_abs_prob_difference": 0.00797,
+      "decision_disagreements_at_0.5": 0
+    },
+    "single_request_latency": {
+      "rows": 50,
+      "mean_ms": 74.9,
+      "p95_ms": 184.6,
+      "max_ms": 213.5
+    },
+    "latency_note": "latency_ms_per_sample is batched throughput; see single_request_latency for one request at a time",
+    "command": ".venv/bin/python scripts/eval_pretrained_bert.py"
+  }
+}
