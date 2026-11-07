@@ -1,0 +1,95 @@
+{
+  "model": "tfidf_xgboost",
+  "test_set": "data/splits/test.parquet (see results/split_manifest.json)",
+  "decision_rule": "phishing if score >= 0.5",
+  "accuracy": 0.846,
+  "precision": 0.9131,
+  "recall": 0.7008,
+  "f1": 0.793,
+  "f1_weighted": 0.8419,
+  "fpr": 0.0485,
+  "roc_auc": 0.9393,
+  "confusion_matrix": {
+    "tn": 8522,
+    "fp": 434,
+    "fn": 1948,
+    "tp": 4562
+  },
+  "n": 15466,
+  "latency_ms_per_sample": 0.4154,
+  "by_type": {
+    "html": {
+      "accuracy": 0.9308,
+      "precision": 0.9022,
+      "recall": 0.8989,
+      "f1": 0.9005,
+      "f1_weighted": 0.9308,
+      "fpr": 0.0521,
+      "roc_auc": 0.9747,
+      "confusion_matrix": {
+        "tn": 1947,
+        "fp": 107,
+        "fn": 111,
+        "tp": 987
+      },
+      "n": 3152
+    },
+    "text": {
+      "accuracy": 0.9124,
+      "precision": 0.9409,
+      "recall": 0.823,
+      "f1": 0.878,
+      "f1_weighted": 0.9111,
+      "fpr": 0.0321,
+      "roc_auc": 0.9754,
+      "confusion_matrix": {
+        "tn": 2413,
+        "fp": 80,
+        "fn": 274,
+        "tp": 1274
+      },
+      "n": 4041
+    },
+    "url": {
+      "accuracy": 0.7812,
+      "precision": 0.9031,
+      "recall": 0.5955,
+      "f1": 0.7177,
+      "f1_weighted": 0.773,
+      "fpr": 0.056,
+      "roc_auc": 0.8926,
+      "confusion_matrix": {
+        "tn": 4162,
+        "fp": 247,
+        "fn": 1563,
+        "tp": 2301
+      },
+      "n": 8273
+    }
+  },
+  "git_commit": "a7d33da1574e1ee6d32d5efe29a82ad62e818166",
+  "details": {
+    "description": "TF-IDF (author's settings) + XGBoost with the author's hyperparameters (colsample_bytree 0.7, gamma 0.2, lr 0.1, max_depth 12, min_child_weight 2, n_estimators 100, subsample 0.8)",
+    "train_rows": 55664,
+    "train_seconds": 245.4,
+    "validation_metrics": {
+      "accuracy": 0.8525,
+      "precision": 0.9217,
+      "recall": 0.71,
+      "f1": 0.8021,
+      "f1_weighted": 0.8487,
+      "fpr": 0.0438,
+      "roc_auc": 0.9445,
+      "confusion_matrix": {
+        "tn": 3425,
+        "fp": 157,
+        "fn": 755,
+        "tp": 1848
+      },
+      "n": 6185
+    },
+    "latency_note": "includes text vectorisation / feature extraction; batch prediction on CPU",
+    "saved_model": "models/classical/tfidf_xgboost.joblib (git-ignored)",
+    "command": ".venv/bin/python scripts/train_classical.py tfidf_xgboost"
+  }
+}

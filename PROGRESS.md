@@ -8,7 +8,7 @@
 | 0 Recon and repo setup | done | `phase-0-recon` |
 | 1 Restructure and environment | done | `phase-1-env` |
 | 2 Data | done | `phase-2-data` |
-| 3 Evaluation and baselines | not started | |
+| 3 Evaluation and baselines | done | `phase-3-baselines` |
 | 4 BERT | not started | |
 | 5 Backend | not started | |
 | 6 Frontend | not started | |
@@ -196,6 +196,44 @@ What this means for the report:
 - **Limitation (kept, reported):** 22 test rows have an exact duplicate text in `train.json` (68 after normalising case and whitespace = 0.44% of test). They are kept so the test set stays identical to the author's.
 - `data/raw/combined_reduced.json` (497 MB, git-ignored) was downloaded during the investigation and is no longer used. It can be deleted.
 - The test set (15,466 rows) satisfies the proposal's "held-out test set of at least 10,000 labelled samples".
+
+---
+
+## Phase 3 — Shared evaluation and baselines (2026-11-07)
+
+**Schedule note:** work resumed on 7 Nov (day 6 of 7), so Phases 3–7 are compressed into the remaining time. Cut order from the prompt applies if needed (OOD set first, then token attribution).
+
+**`src/evaluate.py`** — one function for every model, on the one test set (15,466 rows). Metric decision, used everywhere from now on: **precision/recall/F1 are binary for the phishing class (label 1)**; weighted F1 is stored as `f1_weighted`, labelled. Also FPR = FP/(FP+TN), ROC-AUC from the continuous score, confusion matrix, mean latency per sample, and all metrics per sample type. Each result file records the git commit it was produced from. A suffix `+dirty` means it was generated from code that was not yet committed; that code is in the same commit that adds the results file. Tests: `tests/test_evaluate.py` (hand-computed values).
+
+**Baseline 0 — the app's heuristic** (`src/models/heuristic.py`): port of `simulateAnalysis()`. **Parity proven:** the original JS, extracted from the HTML and run in Node.js, gives the same score and verdict as the port on **all 15,466 test rows (0 mismatches, `results/heuristic_parity.json`)**. Non-fired indicators score 0 instead of `Math.random()`.
+
+**Classical models** (`src/models/classical.py`, `scripts/train_classical.py`), fixed hyperparameters (no tuning), TF-IDF fitted on train only:
+- `tfidf_logreg`: author's TF-IDF settings + Logistic Regression.
+- `tfidf_xgboost`: author's TF-IDF settings + XGBoost with the author's hyperparameters.
+- `features_rf`: Random Forest (300 trees) on the reference `features.py` features (copied to `src/features.py` unchanged, with attribution header). 0 HTML parse failures.
+
+### Results on the shared test set (generated from `results/*.json`)
+
+| Model | Accuracy | Precision | Recall | F1 | FPR | ROC-AUC | Latency (ms/sample) | Train time (s) |
+|---|---|---|---|---|---|---|---|---|
+| `heuristic` | 0.5792 | 1.0 | 0.0003 | 0.0006 | 0.0 | 0.5897 | 0.3206 | – |
+| `tfidf_logreg` | 0.8842 | 0.906 | 0.8088 | 0.8546 | 0.061 | 0.9627 | 0.3633 | 38.4 |
+| `tfidf_xgboost` | 0.846 | 0.9131 | 0.7008 | 0.793 | 0.0485 | 0.9393 | 0.4154 | 245.4 |
+| `features_rf` | 0.8735 | 0.873 | 0.8184 | 0.8448 | 0.0865 | 0.9328 | 4.0027 | 189.2 |
+
+| Model | URL acc | Text acc | HTML acc |
+|---|---|---|---|
+| `heuristic` | 0.5332 | 0.6169 | 0.6516 |
+| `tfidf_logreg` | 0.8448 | 0.9423 | 0.9131 |
+| `tfidf_xgboost` | 0.7812 | 0.9124 | 0.9308 |
+| `features_rf` | 0.8837 | 0.8349 | 0.8959 |
+
+**Observations**
+- The heuristic gives only 2 "phishing" verdicts in 15,466 rows. Its accuracy (0.579) equals the benign share of the test set, so it is no better than always answering "legitimate". The hand-checked test shows why: `http://paypa1-login.tk/x` fires four risk rules and still scores 0.549, under the 0.55 cut-off.
+- None of the classical models reaches the proposal's target (accuracy ≥ 0.95, F1 ≥ 0.93). Best: TF-IDF + LogReg, accuracy 0.8842 / F1 0.8546.
+- XGBoost (0.846) is close to the author's reported 0.850 for the same setup on a similar dataset version — a sanity check that the pipeline matches his.
+- URLs are the weak spot for TF-IDF models (single "words"); the hand-crafted features handle URLs best (0.8837) but are weaker on email/SMS text.
+- RF latency (4.0 ms/sample) is dominated by feature extraction, mostly HTML parsing.
 
 ---
 

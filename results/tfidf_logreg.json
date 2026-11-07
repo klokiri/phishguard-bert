@@ -1,0 +1,95 @@
+{
+  "model": "tfidf_logreg",
+  "test_set": "data/splits/test.parquet (see results/split_manifest.json)",
+  "decision_rule": "phishing if score >= 0.5",
+  "accuracy": 0.8842,
+  "precision": 0.906,
+  "recall": 0.8088,
+  "f1": 0.8546,
+  "f1_weighted": 0.8831,
+  "fpr": 0.061,
+  "roc_auc": 0.9627,
+  "confusion_matrix": {
+    "tn": 8410,
+    "fp": 546,
+    "fn": 1245,
+    "tp": 5265
+  },
+  "n": 15466,
+  "latency_ms_per_sample": 0.3633,
+  "by_type": {
+    "html": {
+      "accuracy": 0.9131,
+      "precision": 0.8902,
+      "recall": 0.8561,
+      "f1": 0.8728,
+      "f1_weighted": 0.9127,
+      "fpr": 0.0565,
+      "roc_auc": 0.9634,
+      "confusion_matrix": {
+        "tn": 1938,
+        "fp": 116,
+        "fn": 158,
+        "tp": 940
+      },
+      "n": 3152
+    },
+    "text": {
+      "accuracy": 0.9423,
+      "precision": 0.9416,
+      "recall": 0.9057,
+      "f1": 0.9233,
+      "f1_weighted": 0.9421,
+      "fpr": 0.0349,
+      "roc_auc": 0.9877,
+      "confusion_matrix": {
+        "tn": 2406,
+        "fp": 87,
+        "fn": 146,
+        "tp": 1402
+      },
+      "n": 4041
+    },
+    "url": {
+      "accuracy": 0.8448,
+      "precision": 0.895,
+      "recall": 0.7565,
+      "f1": 0.8199,
+      "f1_weighted": 0.8432,
+      "fpr": 0.0778,
+      "roc_auc": 0.9436,
+      "confusion_matrix": {
+        "tn": 4066,
+        "fp": 343,
+        "fn": 941,
+        "tp": 2923
+      },
+      "n": 8273
+    }
+  },
+  "git_commit": "a7d33da1574e1ee6d32d5efe29a82ad62e818166",
+  "details": {
+    "description": "TF-IDF (1-2 grams, max_df 0.25, English stop words, 50k features; author's settings) + LogisticRegression(max_iter=2000)",
+    "train_rows": 55664,
+    "train_seconds": 38.4,
+    "validation_metrics": {
+      "accuracy": 0.8836,
+      "precision": 0.9039,
+      "recall": 0.8095,
+      "f1": 0.8541,
+      "f1_weighted": 0.8825,
+      "fpr": 0.0625,
+      "roc_auc": 0.9632,
+      "confusion_matrix": {
+        "tn": 3358,
+        "fp": 224,
+        "fn": 496,
+        "tp": 2107
+      },
+      "n": 6185
+    },
+    "latency_note": "includes text vectorisation / feature extraction; batch prediction on CPU",
+    "saved_model": "models/classical/tfidf_logreg.joblib (git-ignored)",
+    "command": ".venv/bin/python scripts/train_classical.py tfidf_logreg"
+  }
+}
