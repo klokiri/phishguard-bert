@@ -1,0 +1,170 @@
+{
+  "data": "data/splits/train.parquet",
+  "min_support": 30,
+  "min_lift": 0.1,
+  "excluded_from_display": {
+    "url_https": "dataset artefact: only 10% of benign training URLs include a scheme vs 45% of phishing URLs, so 'https://' looks like a phishing sign in this data; showing it would mislead users",
+    "url_explicit_http": "same scheme artefact as url_https"
+  },
+  "base_phishing_rate": {
+    "url": 0.4678,
+    "email": 0.3838
+  },
+  "rows": {
+    "url": 29858,
+    "email": 14493
+  },
+  "rules": {
+    "url_ip_host": {
+      "input_type": "url",
+      "name": "Raw IP address as host",
+      "fired": 258,
+      "phishing_rate": 0.9961
+    },
+    "url_at_sign": {
+      "input_type": "url",
+      "name": "'@' symbol in URL",
+      "fired": 168,
+      "phishing_rate": 0.9762
+    },
+    "url_shortener": {
+      "input_type": "url",
+      "name": "URL shortening service",
+      "fired": 1835,
+      "phishing_rate": 0.3804
+    },
+    "url_hyphen_domain": {
+      "input_type": "url",
+      "name": "Hyphen in domain name",
+      "fired": 3948,
+      "phishing_rate": 0.7976
+    },
+    "url_double_slash": {
+      "input_type": "url",
+      "name": "Redirect-style '//' in path",
+      "fired": 89,
+      "phishing_rate": 0.9775
+    },
+    "url_port": {
+      "input_type": "url",
+      "name": "Explicit port number",
+      "fired": 81,
+      "phishing_rate": 0.9012
+    },
+    "url_login_word": {
+      "input_type": "url",
+      "name": "'login' in URL",
+      "fired": 1260,
+      "phishing_rate": 0.9778
+    },
+    "url_admin_word": {
+      "input_type": "url",
+      "name": "'admin' in URL",
+      "fired": 279,
+      "phishing_rate": 0.9462
+    },
+    "url_encoded": {
+      "input_type": "url",
+      "name": "Percent-encoded characters",
+      "fired": 606,
+      "phishing_rate": 0.3383
+    },
+    "url_long": {
+      "input_type": "url",
+      "name": "Long URL (over 75 characters)",
+      "fired": 3593,
+      "phishing_rate": 0.5026
+    },
+    "url_many_subdomains": {
+      "input_type": "url",
+      "name": "Many subdomains (3+ dots in host)",
+      "fired": 3485,
+      "phishing_rate": 0.798
+    },
+    "url_many_digits": {
+      "input_type": "url",
+      "name": "Many digits (more than 5)",
+      "fired": 6308,
+      "phishing_rate": 0.3844
+    },
+    "url_suspicious_tld": {
+      "input_type": "url",
+      "name": "Frequently abused top-level domain",
+      "fired": 2872,
+      "phishing_rate": 0.9641
+    },
+    "url_brand_lookalike": {
+      "input_type": "url",
+      "name": "Brand look-alike spelling",
+      "fired": 7,
+      "phishing_rate": 1.0
+    },
+    "url_explicit_http": {
+      "input_type": "url",
+      "name": "Unencrypted http://",
+      "fired": 3047,
+      "phishing_rate": 0.7325
+    },
+    "url_https": {
+      "input_type": "url",
+      "name": "Uses https://",
+      "fired": 4864,
+      "phishing_rate": 0.8351
+    },
+    "text_urgency": {
+      "input_type": "email",
+      "name": "Urgency language",
+      "fired": 913,
+      "phishing_rate": 0.5717
+    },
+    "text_credentials": {
+      "input_type": "email",
+      "name": "Request for credentials or payment details",
+      "fired": 422,
+      "phishing_rate": 0.6137
+    },
+    "text_threat": {
+      "input_type": "email",
+      "name": "Threat or consequence language",
+      "fired": 190,
+      "phishing_rate": 0.3895
+    },
+    "text_prize": {
+      "input_type": "email",
+      "name": "Prize or money lure",
+      "fired": 1189,
+      "phishing_rate": 0.6577
+    },
+    "text_generic_greeting": {
+      "input_type": "email",
+      "name": "Generic greeting",
+      "fired": 48,
+      "phishing_rate": 0.9583
+    },
+    "text_has_url": {
+      "input_type": "email",
+      "name": "Contains a link",
+      "fired": 3407,
+      "phishing_rate": 0.2486
+    },
+    "text_ip_link": {
+      "input_type": "email",
+      "name": "Link to a raw IP address",
+      "fired": 72,
+      "phishing_rate": 0.9722
+    },
+    "text_has_email": {
+      "input_type": "email",
+      "name": "Contains an email address",
+      "fired": 1854,
+      "phishing_rate": 0.2335
+    },
+    "text_brand_lookalike": {
+      "input_type": "email",
+      "name": "Brand look-alike spelling",
+      "fired": 0,
+      "phishing_rate": null
+    }
+  },
+  "command": ".venv/bin/python scripts/build_indicator_stats.py"
+}
