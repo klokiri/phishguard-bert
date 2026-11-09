@@ -31,6 +31,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from src.config import DECISION_THRESHOLD
 from sklearn.metrics import (
     accuracy_score,
     confusion_matrix,
@@ -95,7 +96,7 @@ def evaluate(
     scores,
     latency_seconds_total: float,
     preds=None,
-    threshold: float = 0.5,
+    threshold: float = DECISION_THRESHOLD,  # 0.5, from src/config.py
     details: dict | None = None,
     write: bool = True,
 ) -> dict:
