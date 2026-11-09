@@ -10,7 +10,7 @@
 | 2 Data | done | `phase-2-data` |
 | 3 Evaluation and baselines | done | `phase-3-baselines` |
 | 4 BERT | done | `phase-4-bert` |
-| 5 Backend | not started | |
+| 5 Backend | done | `phase-5-backend` |
 | 6 Frontend | not started | |
 | 7 Evaluation assets, report, cleanup | not started | |
 
@@ -319,6 +319,62 @@ F1 by sample type: bert-base URL 0.9689 · text 0.9828 · **HTML 0.8905** (autho
 - It is within 0.006 accuracy and 0.0074 F1 of the author's bert-large while having ~3× fewer parameters, training on 10% less data, and running ~2.8× faster per sample (6.3 vs 17.7 ms batched).
 - Test F1 (0.9589) is a little below best validation F1 (0.9660). That is expected: the checkpoint was chosen *because* it scored well on validation, so validation slightly overstates. The test number is the one to report.
 - HTML is the weak spot for both BERT models (91% of pages are cut off at 512 tokens).
+
+---
+
+## Phase 5 — Backend (2026-11-09)
+
+Run: `.venv/bin/python -m backend.app` (BERT; `PHISHGUARD_MODEL=heuristic` or `classical` to swap). Bound to 127.0.0.1:5000.
+
+**Structure**
+- `src/config.py` — the one config: model kind/paths (env vars), `max_length` 512, **decision threshold 0.5** (the rule every `results/*.json` was measured with; `src/evaluate.py` imports it), display-only "suspicious" band 0.4–0.6, rate limit 100/hour/IP, 100,000-character input limit, attribution word limit, DB path.
+- `backend/model_service.py` — `ModelService` interface; `BertService`, `ClassicalService`, `HeuristicService`; `create_service()` (NFR-12).
+- `backend/app.py` — `create_app(config, service)`. Validation → 422; non-JSON → 400; per-IP sliding-window limit → 429 + `Retry-After`; parameterised SQLite queries only; only a SHA-256 hash of the input is stored (no content); CORS limited to localhost and `file://` (`null`) origins.
+- `backend/indicators.py` + `scripts/build_indicator_stats.py` — deterministic rule-based indicators; `backend/attribution.py` — occlusion; `backend/explain.py` — explanation text.
+
+**Indicators — how scores are derived.** Each rule is run over the **training split**; for samples where it fires, the phishing rate is recorded (`results/indicator_stats.json`). An indicator appears only when its rule fires on the input; score = phishing rate × 100 if above the base rate (risk), else legitimate rate × 100 (safe). Base phishing rates: URL 0.4678, email/SMS 0.3838.
+
+| Rule | Input | Training hits | Phishing rate | Shown? |
+|---|---|---|---|---|
+| Raw IP address as host | url | 306 | 0.9967 | yes, risk |
+| '@' symbol in URL | url | 168 | 0.9762 | yes, risk |
+| URL shortening service | url | 1,835 | 0.3804 | no (within 10 pts of base) |
+| Hyphen in domain name | url | 3,948 | 0.7976 | yes, risk |
+| Redirect-style '//' in path | url | 89 | 0.9775 | yes, risk |
+| Explicit port number | url | 81 | 0.9012 | yes, risk |
+| 'login' in URL | url | 1,260 | 0.9778 | yes, risk |
+| 'admin' in URL | url | 279 | 0.9462 | yes, risk |
+| Percent-encoded characters | url | 606 | 0.3383 | yes, safe |
+| Long URL (over 75 characters) | url | 3,593 | 0.5026 | no (within 10 pts of base) |
+| Many subdomains (3+ dots in host) | url | 3,485 | 0.798 | yes, risk |
+| Many digits (more than 5) | url | 6,308 | 0.3844 | no (within 10 pts of base) |
+| Frequently abused top-level domain | url | 2,872 | 0.9641 | yes, risk |
+| Brand look-alike spelling | url | 7 | 1.0 | no (< 30 hits) |
+| Unencrypted http:// | url | 3,047 | 0.7325 | no (excluded: dataset artefact) |
+| Uses https:// | url | 4,864 | 0.8351 | no (excluded: dataset artefact) |
+| Urgency language | email | 913 | 0.5717 | yes, risk |
+| Request for credentials or payment details | email | 422 | 0.6137 | yes, risk |
+| Threat or consequence language | email | 190 | 0.3895 | no (within 10 pts of base) |
+| Prize or money lure | email | 1,189 | 0.6577 | yes, risk |
+| Generic greeting | email | 48 | 0.9583 | yes, risk |
+| Contains a link | email | 3,407 | 0.2486 | yes, safe |
+| Link to a raw IP address | email | 72 | 0.9722 | yes, risk |
+| Contains an email address | email | 1,854 | 0.2335 | yes, safe |
+| Brand look-alike spelling | email | 0 | – | no (< 30 hits) |
+
+**Important dataset finding (for the report's limitations).** Only **10.2%** of benign training URLs include a scheme (`http://`/`https://`) versus **45.1%** of phishing URLs (computed on `train.parquet`, URL rows). This is an artefact of how the source URL lists were collected, so "has https://" looks like a phishing sign in this data. Real users nearly always paste full URLs, so every model trained on this data may over-flag legitimate full URLs. The scheme rules are therefore hidden from users; the effect on the models is checked in the Phase 7 error analysis. Some other rates are counter-intuitive for the same kind of reason (e.g. "contains a link" is 75% legitimate because many benign emails are Enron business mail with links). Indicators show what correlates with phishing *in this dataset*.
+
+**Token attribution.** Leave-one-word-out occlusion on the first 60 words, effect in log-odds (plain probability differences vanish when the model is ~0.9999 sure), model-agnostic. Shown as "occlusion (leave-one-word-out), effect in log-odds" — not attention, not SHAP.
+
+**Explanation text** is built only from the probability, the rules that fired (with evidence) and the measured word effects. Extreme probabilities are shown as ">99.9%"/"<0.1%".
+
+**Tests and coverage (NFR-09):** `.venv/bin/python scripts/coverage_report.py` → **62 passed; backend statement coverage 96.9% total, lowest module 95.7% (`app.py`); target 80% met** (`results/coverage.json`). Every API test runs against a fake model and the real heuristic with no code change (NFR-12 check). Bugs found by the tests: (1) the reference `URLFeatures.host_is_ip()` misses IP hosts with a port, so our rule checks the host name; (2) the full test run segfaulted because xgboost (Homebrew libomp) and torch (bundled libomp) were loaded in one process — xgboost is now imported lazily.
+
+**Live check** (real server + curl): `/health` → `phishguard-bert-base` on `mps`; a phishing email with `Origin: null` (as sent by a `file://` page) → 200 with `Access-Control-Allow-Origin: null`, p = 0.9999, 4 indicators, 156 ms; empty content → 422; listening on 127.0.0.1 only.
+
+**Latency (single user, not a load test):** typical request 25–215 ms including attribution; worst case seen, a long HTML page (60 words × 512 tokens re-scored), 973 ms. NFR-04's 50-user load test was not run.
+
+**Not done (state in the report):** no authentication (FR-02, NFR-01), no TLS (NFR-02), no immutable audit log (NFR-10), no OpenAPI spec file (part of NFR-12), rate limit is per IP only (no per-user limit, as there are no users), no load test (NFR-04).
 
 ---
 

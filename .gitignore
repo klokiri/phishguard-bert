@@ -35,3 +35,6 @@ huggingface/
 phishguard-ai-starter.zip
 
 # NOTE: results/ is deliberately NOT ignored — its JSON and figures are evidence.
+
+# Coverage data file (results/coverage.json holds the committed figure)
+.coverage

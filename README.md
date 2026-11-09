@@ -40,6 +40,14 @@ On Windows/Linux with an NVIDIA GPU: install PyTorch for your CUDA version from 
 
 Downloads `train.json` and `test.json` (~551 MB) from [ealvaradob/phishing-dataset](https://huggingface.co/datasets/ealvaradob/phishing-dataset) at revision `23b8c17f`, which is the split the published model `ealvaradob/bert-finetuned-phishing` was trained and tested on. It verifies their SHA-256 hashes, takes a stratified 10% validation set from the training data (seed 42), and writes `data/splits/{train,val,test}.parquet`. It also writes the committed evidence files `results/split_manifest.json` (hashes of every split) and `results/data_summary.json` (counts and class balance). Why this revision and not the newer `combined_reduced.json`: see PROGRESS.md, Phase 2.
 
+## Running the backend
+
+```bash
+.venv/bin/python -m backend.app
+```
+
+Serves the fine-tuned BERT model at http://127.0.0.1:5000/api/v1 (endpoints: `health`, `model/info`, `analyse`, `batch`, `history`, `stats`). To swap models without changing code, set `PHISHGUARD_MODEL=heuristic` or `PHISHGUARD_MODEL=classical`. All settings are in `src/config.py`. Each response contains the phishing probability, rule-based indicators with their evidence and data-derived scores, the words that most changed the model's score (leave-one-word-out occlusion), and an explanation built only from what fired.
+
 ## Reproducing the results
 
 Every number comes from a file in `results/`, produced by one command:
@@ -56,6 +64,8 @@ Every number comes from a file in `results/`, produced by one command:
 | `results/token_length_stats.json` | `.venv/bin/python scripts/token_length_stats.py` |
 | `results/bert_base.json`, `results/bert_base_history.json` (~1.5 h on an M4 Pro; Mac plugged in, lid open) | `caffeinate -i -s .venv/bin/python scripts/train_bert.py --max-length 512 --epochs 3 --precision fp16` |
 | `results/bert_base_training_config.json` (after training) | `.venv/bin/python scripts/export_training_config.py` |
+| `results/indicator_stats.json` (training split only) | `.venv/bin/python scripts/build_indicator_stats.py` |
+| `results/coverage.json` (NFR-09) | `.venv/bin/python scripts/coverage_report.py` |
 
 Model weights are not in git. `models/phishguard-bert-base/` is recreated by the training command and `models/pretrained/` by the evaluation script. GPU training on Apple MPS is not bit-for-bit deterministic, so a re-run gives very close but not necessarily identical numbers.
 
@@ -67,7 +77,7 @@ Metric definitions: precision, recall and F1 are for the phishing class (binary)
 
 ```
 frontend/       PhishGuard_AI.html, bert_connector.js
-backend/        Flask API (app.py)
+backend/        Flask API: app.py, model_service.py, indicators.py, attribution.py, explain.py
 src/            data.py (split), evaluate.py (shared metrics), features.py (from reference), models/
 tests/          pytest tests
 scripts/        check_env.py and later training/evaluation scripts
