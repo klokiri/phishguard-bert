@@ -52,6 +52,12 @@ Every number comes from a file in `results/`, produced by one command:
 | `results/tfidf_logreg.json` | `.venv/bin/python scripts/train_classical.py tfidf_logreg` |
 | `results/tfidf_xgboost.json` | `.venv/bin/python scripts/train_classical.py tfidf_xgboost` |
 | `results/features_rf.json` | `.venv/bin/python scripts/train_classical.py features_rf` |
+| `results/bert_pretrained.json` (downloads the 1.2 GB author model) | `.venv/bin/python scripts/eval_pretrained_bert.py` |
+| `results/token_length_stats.json` | `.venv/bin/python scripts/token_length_stats.py` |
+| `results/bert_base.json`, `results/bert_base_history.json` (~1.5 h on an M4 Pro; Mac plugged in, lid open) | `caffeinate -i -s .venv/bin/python scripts/train_bert.py --max-length 512 --epochs 3 --precision fp16` |
+| `results/bert_base_training_config.json` (after training) | `.venv/bin/python scripts/export_training_config.py` |
+
+Model weights are not in git. `models/phishguard-bert-base/` is recreated by the training command and `models/pretrained/` by the evaluation script. GPU training on Apple MPS is not bit-for-bit deterministic, so a re-run gives very close but not necessarily identical numbers.
 
 Each model also writes per-row test scores to `results/predictions/<model>.csv.gz`. Tests: `.venv/bin/python -m pytest tests/`.
 

@@ -9,7 +9,7 @@
 | 1 Restructure and environment | done | `phase-1-env` |
 | 2 Data | done | `phase-2-data` |
 | 3 Evaluation and baselines | done | `phase-3-baselines` |
-| 4 BERT | not started | |
+| 4 BERT | done | `phase-4-bert` |
 | 5 Backend | not started | |
 | 6 Frontend | not started | |
 | 7 Evaluation assets, report, cleanup | not started | |
@@ -234,6 +234,91 @@ What this means for the report:
 - XGBoost (0.846) is close to the author's reported 0.850 for the same setup on a similar dataset version — a sanity check that the pipeline matches his.
 - URLs are the weak spot for TF-IDF models (single "words"); the hand-crafted features handle URLs best (0.8837) but are weaker on email/SMS text.
 - RF latency (4.0 ms/sample) is dominated by feature extraction, mostly HTML parsing.
+
+**Note on `git_commit` stamps in results files** (found in Phase 4): until commit `a7804bd`, `src/evaluate.py` detected uncommitted changes with `git diff HEAD`, which ignores new (untracked) files. So the Phase 3 and 4a results are stamped with the commit *before* the one that added the code that produced them: `heuristic.json` → code in `a7d33da`; `tfidf_*.json`, `features_rf.json` → `6115ee7`; `bert_pretrained.json` → `a7804bd`. Fixed in Phase 4 (`git status --porcelain`), so later files are stamped `+dirty` when generated before their code is committed.
+
+---
+
+## Phase 4 — BERT (2026-11-07)
+
+### 4a. The author's pre-trained model on the held-out test set
+
+`.venv/bin/python scripts/eval_pretrained_bert.py` — `ealvaradob/bert-finetuned-phishing` @ `fa8fb73a` (bert-large, 1.2 GB), MPS, float16, batch 32, truncation at 512 tokens, length-sorted batches.
+
+| | Accuracy | Precision | Recall | F1 | FPR | ROC-AUC |
+|---|---|---|---|---|---|---|
+| Measured by us (`results/bert_pretrained.json`) | 0.9716 | 0.9656 | 0.967 | 0.9663 | 0.025 | 0.9944 |
+| Author-reported (model card, epoch 4) | 0.9717 | 0.9658 | 0.967 | not reported | 0.0249 | not reported |
+
+- Our independent run reproduces the model card to within 0.0002 on every reported metric. This also confirms that the Phase 2 test set is the author's real held-out set.
+- **How to describe it in the report:** measured on data the model was not trained on, but the author used this test set to pick the best epoch, so it is slightly optimistic. It is the author's model, not Kasim's.
+- It is the only model so far above the proposal's target (accuracy ≥ 0.95, F1 ≥ 0.93).
+- By sample type (accuracy / recall / FPR): URL 0.9758 / 0.971 / 0.020; text 0.9889 / 0.9819 / 0.0068; **HTML 0.9385 / 0.9317 / 0.0579** — HTML is the weakest, consistent with 91% of HTML pages being truncated at 512 tokens.
+- float16 vs float32 on 400 rows: largest probability difference 0.00797, 0 changed decisions.
+- Latency: 17.7 ms/sample batched; one request at a time (what the API sees) mean 74.9 ms, p95 184.6 ms, max 213.5 ms over 50 requests — well inside NFR-04's 3,000 ms (single user; not a 50-user load test).
+
+### 4b. Fine-tuning Kasim's own `bert-base-uncased`
+
+**Token lengths** (`results/token_length_stats.json`, train split, bert-base-uncased tokenizer): median 35 tokens overall, but very different per type. URLs: 97% fit in 64 tokens. Emails/SMS: median 201; 58% fit in 256, 79% in 512. HTML: median 7,318; only 8.6% fit in 512.
+
+**Benchmark** (`scripts/train_bert.py --benchmark`, 60 steps, fp16, batch 16, length-grouped batches): 0.357 s/step at max_length 256 (~21 min/epoch), 0.442 s/step at 512 (~26 min/epoch); loss decreasing normally in fp16.
+
+**Decision (Kasim, 2026-11-07):** max_length **512**, up to 3 epochs with early stopping on validation F1 (patience 1). Rationale: only ~25% slower than 256, reads 79% of emails in full instead of 58%, and matches the author model's input limit, which keeps the comparison fair.
+
+transformers 5.x note: `group_by_length=True` is now `train_sampling_strategy="group_by_length"`.
+
+**First run lost (7–9 Nov).** Started 7 Nov ~15:40. The macOS power log shows "Clamshell Sleep" (lid closed, on battery at 18%) at 16:33. Training froze at step 407 / 10,437 and the job was stopped on 9 Nov. Running speed between sleeps was normal. Two mistakes on our side: (1) the app's keep-awake only lasts while the session is active and cannot prevent lid-close sleep; (2) checkpoints were saved only once per epoch (every 3,479 steps), so nothing was kept. **Fix:** validation and checkpoints every 1,000 steps (early-stopping patience 3 evaluations ≈ 1 epoch), and the run wrapped in `caffeinate -i -s` on AC power. Restarted from scratch on 9 Nov.
+
+**Second attempt lost (9 Nov, ~step 253).** The process grew to 22 GB on the 24 GB Mac, with 12 GB in swap, so steps took minutes. Cause: Apple's MPS backend caches GPU buffers per tensor shape, and free-length padding produced hundreds of shapes. The 60-step benchmark was too short to reveal it. **Fix:** pad batches to a multiple of 64 tokens (at most 8 shapes; padding is masked, so results are unaffected), empty the MPS cache every 50 steps, and log memory. A 400-step test held at 9.7 GB.
+
+**Schedule:** the planned 7-day window ended on 8 Nov. Remaining phases (5 backend, 6 frontend, 7 report) continue after Phase 4.
+
+### 4b result (third run, 9 Nov, completed)
+
+Command: `caffeinate -i -s .venv/bin/python scripts/train_bert.py --max-length 512 --epochs 3 --precision fp16`. Training time 5,455 s (1 h 31 min), all 3 epochs, memory flat at 9.7 GB throughout. Full configuration: `results/bert_base_training_config.json` (exported from the saved `training_args.bin`: AdamW fused, lr 2e-5 linear decay, no warm-up, batch 16, weight decay 0.01, fp16, seed 42 / data_seed 42).
+
+**Validation history** (from `results/bert_base_history.json`; validation set only, NOT test):
+
+| Step | Epoch | Val loss | Val accuracy | Val precision | Val recall | Val F1 |
+|---|---|---|---|---|---|---|
+| 1000 | 0.287 | 0.2048 | 0.9287 | 0.8998 | 0.9347 | 0.9169 |
+| 2000 | 0.575 | 0.2548 | 0.9167 | 0.9833 | 0.8160 | 0.8919 |
+| 3000 | 0.862 | 0.1598 | 0.9486 | 0.9719 | 0.9040 | 0.9367 |
+| 4000 | 1.150 | 0.1549 | 0.9559 | 0.9460 | 0.9493 | 0.9477 |
+| 5000 | 1.437 | 0.1569 | 0.9593 | 0.9693 | 0.9328 | 0.9507 |
+| 6000 | 1.725 | 0.2143 | 0.9484 | 0.9880 | 0.8882 | 0.9355 |
+| 7000 | 2.012 | 0.1459 | 0.9635 | 0.9783 | 0.9339 | 0.9556 |
+| 8000 | 2.300 | 0.1414 | 0.9688 | 0.9624 | 0.9635 | 0.9629 |
+| 9000 | 2.587 | 0.1476 | 0.9688 | 0.9681 | 0.9574 | 0.9627 |
+| 10000 | 2.874 | 0.1474 | 0.9690 | 0.9767 | 0.9489 | 0.9626 |
+| **10437** | **3.000** | **0.1393** | **0.9715** | **0.9716** | **0.9604** | **0.9660** |
+
+- **Selected checkpoint: `checkpoint-10437`** (end of epoch 3), the highest validation F1 (0.9660). Early stopping never triggered (the longest run without improvement was 2 evaluations).
+- Because the best checkpoint is the last one, the model may not have fully converged; more epochs *might* help. This was **not** tested, and testing it by looking at test scores would be tuning on the test set. Report it as a limitation / future work.
+- Training loss fell from 0.587 (step 100) to 0.028 (step 10,400) while validation loss stayed around 0.14: a clear train/validation gap, but validation F1 was still rising, so the gap did not hurt validation performance within 3 epochs.
+
+**Test-set evaluation** (`results/bert_base.json`, run once after training, via `src/evaluate.py`):
+
+| Model | Accuracy | Precision | Recall | F1 | FPR | ROC-AUC | Latency (ms/sample, batched) |
+|---|---|---|---|---|---|---|---|
+| Heuristic (current app) | 0.5792 | 1.0 | 0.0003 | 0.0006 | 0.0 | 0.5897 | 0.3206 |
+| TF-IDF + LogReg | 0.8842 | 0.906 | 0.8088 | 0.8546 | 0.061 | 0.9627 | 0.3633 |
+| TF-IDF + XGBoost | 0.846 | 0.9131 | 0.7008 | 0.793 | 0.0485 | 0.9393 | 0.4154 |
+| Random Forest (features) | 0.8735 | 0.873 | 0.8184 | 0.8448 | 0.0865 | 0.9328 | 4.0027 |
+| **bert-base, fine-tuned by Kasim** | **0.9655** | **0.9631** | **0.9547** | **0.9589** | **0.0266** | **0.9935** | 6.2714 |
+| bert-large, author's model † | 0.9716 | 0.9656 | 0.967 | 0.9663 | 0.025 | 0.9944 | 17.7278 |
+
+† Author's model: not trained on this test set, but the author used it to choose his best epoch, so slightly optimistic.
+
+Confusion matrix, bert-base (test, n = 15,466): TN 8,718 · FP 238 · FN 295 · TP 6,215.
+
+F1 by sample type: bert-base URL 0.9689 · text 0.9828 · **HTML 0.8905** (author's model: 0.974 · 0.9854 · 0.9134).
+
+**Interpretation**
+- Kasim's bert-base **meets the proposal's objective** on the held-out test set: accuracy 0.9655 ≥ 0.95 and F1 0.9589 ≥ 0.93.
+- It is within 0.006 accuracy and 0.0074 F1 of the author's bert-large while having ~3× fewer parameters, training on 10% less data, and running ~2.8× faster per sample (6.3 vs 17.7 ms batched).
+- Test F1 (0.9589) is a little below best validation F1 (0.9660). That is expected: the checkpoint was chosen *because* it scored well on validation, so validation slightly overstates. The test number is the one to report.
+- HTML is the weak spot for both BERT models (91% of pages are cut off at 512 tokens).
 
 ---
 

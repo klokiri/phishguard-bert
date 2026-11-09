@@ -57,7 +57,10 @@ def git_commit() -> str:
     """
     try:
         sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True).strip()
-        dirty = subprocess.call(["git", "diff", "--quiet", "HEAD"], cwd=REPO_ROOT) != 0
+        # --porcelain also lists new (untracked) files, e.g. a model script
+        # that has not been committed yet; "git diff HEAD" would miss those.
+        status = subprocess.check_output(["git", "status", "--porcelain"], cwd=REPO_ROOT, text=True)
+        dirty = bool(status.strip())
         return sha + ("+dirty" if dirty else "")
     except (OSError, subprocess.CalledProcessError):
         return "unknown"
