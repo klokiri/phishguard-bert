@@ -18,8 +18,8 @@
     "url_ip_host": {
       "input_type": "url",
       "name": "Raw IP address as host",
-      "fired": 258,
-      "phishing_rate": 0.9961
+      "fired": 306,
+      "phishing_rate": 0.9967
     },
     "url_at_sign": {
       "input_type": "url",

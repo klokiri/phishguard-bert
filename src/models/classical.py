@@ -26,7 +26,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from xgboost import XGBClassifier
 
 from src.features import HTMLFeatures, TextFeatures, URLFeatures
 
@@ -48,6 +47,12 @@ def make_tfidf_logreg() -> Pipeline:
 
 
 def make_tfidf_xgboost() -> Pipeline:
+    # Imported here, not at the top: xgboost loads Homebrew's OpenMP runtime
+    # (libomp) and PyTorch bundles its own. Two OpenMP runtimes in one process
+    # crash on macOS (seen when the test suite loaded both), so xgboost is only
+    # loaded when an XGBoost model is actually built.
+    from xgboost import XGBClassifier
+
     # Hyperparameters copied from the author's notebook.
     return Pipeline([
         ("tfidf", tfidf()),

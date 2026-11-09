@@ -1,0 +1,44 @@
+{
+  "requirement": "NFR-09: >= 80% statement coverage for backend service modules (pytest-cov)",
+  "measured_package": "backend/",
+  "total_percent": 96.9,
+  "lowest_module_percent": 95.7,
+  "target_percent": 80.0,
+  "meets_target_total": true,
+  "meets_target_every_module": true,
+  "files": {
+    "backend/__init__.py": {
+      "statements": 0,
+      "missed": 0,
+      "percent": 100.0
+    },
+    "backend/app.py": {
+      "statements": 161,
+      "missed": 7,
+      "percent": 95.7
+    },
+    "backend/attribution.py": {
+      "statements": 23,
+      "missed": 0,
+      "percent": 100.0
+    },
+    "backend/explain.py": {
+      "statements": 35,
+      "missed": 1,
+      "percent": 97.1
+    },
+    "backend/indicators.py": {
+      "statements": 66,
+      "missed": 2,
+      "percent": 97.0
+    },
+    "backend/model_service.py": {
+      "statements": 39,
+      "missed": 0,
+      "percent": 100.0
+    }
+  },
+  "tests": "62 passed in 7.05s",
+  "tool": "coverage.py 7.17.0 via pytest-cov",
+  "command": ".venv/bin/python scripts/coverage_report.py"
+}

@@ -81,9 +81,13 @@ def _url_rule(fn):
     return check
 
 
+IPV4 = re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
+
 URL_RULES = [
+    # Checks the host name WITHOUT the port: the reference URLFeatures.host_is_ip()
+    # tests "host:port" and so misses e.g. http://10.0.0.1:8080/ (found by a unit test).
     Rule("url_ip_host", "Raw IP address as host", "The host is an IP address instead of a domain name.",
-         _url_rule(lambda f, p, u: p.hostname if f.host_is_ip() else None)),
+         _url_rule(lambda f, p, u: p.hostname if IPV4.match(p.hostname or "") else None)),
     Rule("url_at_sign", "'@' symbol in URL", "The URL contains '@' (browsers ignore everything before it).",
          _url_rule(lambda f, p, u: "@" if f.has_haveat_sign() else None)),
     Rule("url_shortener", "URL shortening service", "The URL uses a known link shortener (bit.ly, tinyurl, ...).",
