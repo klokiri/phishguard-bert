@@ -26,6 +26,7 @@ Design notes for the report:
 """
 
 import hashlib
+import math
 import sqlite3
 import threading
 import time
@@ -194,7 +195,9 @@ def create_app(config: Config | None = None, service: ModelService | None = None
             "id": uuid.uuid4().hex,
             "verdict": verdict,
             "is_phishing": phish_prob >= config.decision_threshold,
-            "confidence": round(100 * max(phish_prob, 1 - phish_prob), 1),
+            # Rounded DOWN to one decimal, so 0.9999 shows as 99.9 and never as a
+            # certainty of 100 that the model does not have.
+            "confidence": math.floor(1000 * max(phish_prob, 1 - phish_prob)) / 10,
             "phish_prob": round(phish_prob, 4),
             "legit_prob": round(1 - phish_prob, 4),
             **details,

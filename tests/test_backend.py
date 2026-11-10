@@ -116,6 +116,15 @@ def test_headers_are_read_with_the_body(tmp_path):
     assert r.get_json()["phish_prob"] == 0.9  # 'verify' only appears in the headers
 
 
+def test_confidence_never_rounds_up_to_100(tmp_path):
+    class SureService(FakeService):
+        def predict_proba(self, texts, input_type):
+            return np.array([0.99999 for _ in texts])
+
+    body = make_client(tmp_path, SureService()).post("/api/v1/analyse", json={"content": BENIGN}).get_json()
+    assert body["confidence"] == 99.9
+
+
 def test_model_failure_returns_500(tmp_path):
     c = make_client(tmp_path, BrokenService())
     r = c.post("/api/v1/analyse", json={"content": PHISHY})

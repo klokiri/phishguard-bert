@@ -444,6 +444,7 @@ option { background: var(--bg2); }
 .indicator-bar.high { background: var(--danger); }
 .indicator-bar.med  { background: var(--warn); }
 .indicator-bar.low  { background: var(--accent); }
+.indicator-bar.safe { background: var(--safe); }
 .indicator-score {
   font-family: var(--mono);
   font-size: 11px;
@@ -783,6 +784,23 @@ canvas { border-radius: var(--r); }
   animation: pulse 2s infinite;
 }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+/* ── BERT backend integration (status badge, model details, word chips) ── */
+.engine-status { display:inline-flex; align-items:center; gap:8px; margin-top:10px; padding:4px 10px;
+  border:1px solid var(--border); border-radius:999px; font-family:var(--mono); font-size:11px; color:var(--text2); }
+.engine-status .engine-dot { width:8px; height:8px; border-radius:50%; background:var(--text3); }
+.engine-status.online .engine-dot { background:var(--safe); box-shadow:0 0 6px var(--safe); }
+.engine-status.offline .engine-dot { background:var(--warn); }
+.engine-details { display:none; margin-top:14px; padding:12px; border:1px solid var(--border2); border-radius:6px; }
+.engine-grid { display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:12px; }
+.engine-grid dt { color:var(--text3); font-family:var(--mono); }
+.engine-grid dd { margin:0; color:var(--text); font-family:var(--mono); overflow-wrap:anywhere; }
+.engine-note { margin-top:6px; font-size:11px; color:var(--warn); }
+.token-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.token-chip { padding:2px 8px; border-radius:4px; font-family:var(--mono); font-size:11px; border:1px solid var(--border); }
+.token-chip.towards-phishing { color:var(--danger); border-color:var(--danger); }
+.token-chip.towards-legit { color:var(--safe); border-color:var(--safe); }
+.token-method { margin-top:6px; font-size:10px; color:var(--text3); font-family:var(--mono); }
+.indicator-evidence { display:block; font-size:10px; color:var(--text3); font-family:var(--mono); overflow-wrap:anywhere; }
 </style>
 </head>
 <body>
@@ -856,8 +874,8 @@ canvas { border-radius: var(--r); }
 <!-- ═══════════════════════════════════════════════════════════ -->
 <div class="modal-overlay hidden" id="api-key-modal">
   <div class="modal-box">
-    <div class="modal-title">🔑 Anthropic API Key Required</div>
-    <div class="modal-subtitle">PhishGuard AI uses the Claude API to power intelligent phishing detection. Enter your Anthropic API key to enable analysis. Your key is stored in memory only and never persisted.</div>
+    <div class="modal-title">🔑 Anthropic API Key (optional)</div>
+    <div class="modal-subtitle">PhishGuard AI analyses with the local BERT backend when it is running. A Claude API key is only used if the backend is offline; without one, the in-browser heuristic is the fallback. Your key is stored in memory only and never persisted.</div>
     <div class="modal-warning">⚠ Your key is used client-side for this demo. In production, all API calls would be made server-side.</div>
     <div class="form-group">
       <label class="form-label">Anthropic API Key</label>
@@ -1023,6 +1041,10 @@ canvas { border-radius: var(--r); }
       <div class="page-header">
         <div class="page-title">THREAT <span>ANALYSER</span></div>
         <div class="page-subtitle">Submit a URL or email content for AI-powered phishing detection</div>
+        <div class="engine-status offline" id="engine-status" role="status" aria-live="polite">
+          <span class="engine-dot" aria-hidden="true"></span>
+          <span class="engine-status-text">Checking BERT backend…</span>
+        </div>
       </div>
 
       <div class="analysis-grid">
@@ -1096,10 +1118,10 @@ canvas { border-radius: var(--r); }
             <div class="skeleton sk-line" style="width:60%;"></div>
             <div class="skeleton sk-line" style="width:70%;"></div>
             <div style="margin-top:16px">
-              <div class="terminal-line">Connecting to Claude API...</div>
-              <div class="terminal-line" id="loading-line-2" style="opacity:0; transition:opacity 0.5s;">Extracting threat features...</div>
+              <div class="terminal-line">Contacting analysis engine...</div>
+              <div class="terminal-line" id="loading-line-2" style="opacity:0; transition:opacity 0.5s;">Checking rule-based indicators...</div>
               <div class="terminal-line" id="loading-line-3" style="opacity:0; transition:opacity 0.5s;">Running classification model...</div>
-              <div class="terminal-line" id="loading-line-4" style="opacity:0; transition:opacity 0.5s;">Computing SHAP explanations...</div>
+              <div class="terminal-line" id="loading-line-4" style="opacity:0; transition:opacity 0.5s;">Building explanation...</div>
             </div>
           </div>
 
@@ -1117,13 +1139,29 @@ canvas { border-radius: var(--r); }
               </div>
             </div>
 
+            <div class="engine-details" id="engine-details">
+              <div class="section-title" style="margin-bottom:8px">Model Details</div>
+              <dl class="engine-grid">
+                <dt>Engine</dt><dd id="engine-name"></dd>
+                <dt>Model</dt><dd id="engine-model"></dd>
+                <dt>Phishing probability</dt><dd id="engine-prob"></dd>
+                <dt>Latency</dt><dd id="engine-latency"></dd>
+              </dl>
+              <div class="engine-note" id="engine-note"></div>
+              <div id="engine-tokens-block" style="display:none; margin-top:10px;">
+                <div class="section-title" style="margin-bottom:4px">Words That Most Changed The Model's Score</div>
+                <div class="token-chips" id="engine-tokens"></div>
+                <div class="token-method" id="engine-tokens-method"></div>
+              </div>
+            </div>
+
             <div class="indicators-section">
               <div class="section-title">Threat Indicators</div>
               <div class="indicators-list" id="indicators-list"></div>
             </div>
 
             <div class="explanation-block" style="margin-top:14px">
-              <div class="section-title" style="margin-bottom:8px">AI Analysis</div>
+              <div class="section-title" style="margin-bottom:8px">Explanation</div>
               <p id="explanation-text"></p>
             </div>
           </div>
@@ -1179,7 +1217,7 @@ canvas { border-radius: var(--r); }
     <div class="page" id="page-training">
       <div class="page-header">
         <div class="page-title">MODEL <span>TRAINING</span></div>
-        <div class="page-subtitle">Upload labelled datasets and train phishing detection models</div>
+        <div class="page-subtitle">Dataset preview only. Training from the web interface is not implemented in this build; Registered Models shows the real measured results.</div>
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
@@ -1238,7 +1276,7 @@ canvas { border-radius: var(--r); }
               </div>
             </div>
             <button class="btn btn-primary w-full btn-lg" id="train-btn" onclick="startTraining()" disabled style="width:100%; justify-content:center;">
-              🧠 START TRAINING
+              🧠 START TRAINING (not available in web UI)
             </button>
           </div>
         </div>
@@ -1264,7 +1302,6 @@ canvas { border-radius: var(--r); }
             </div>
             <div id="training-results" style="display:none;">
               <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-bottom:16px;" id="metrics-grid"></div>
-              <button class="btn btn-primary w-full" onclick="deployModel()" id="deploy-btn" style="width:100%; justify-content:center;">🚀 DEPLOY MODEL</button>
             </div>
           </div>
 
@@ -1326,12 +1363,12 @@ canvas { border-radius: var(--r); }
           <div id="settings-active-model">
             <div class="model-card active-model">
               <div>
-                <div class="model-name" id="active-model-name">claude-sonnet-4-6 (Live API)</div>
-                <div class="model-meta" id="active-model-meta">Anthropic Claude — Real-time analysis</div>
+                <div class="model-name" id="active-model-name"></div>
+                <div class="model-meta" id="active-model-meta"></div>
               </div>
               <div class="model-metrics">
-                <div class="metric-item"><div class="metric-val">99.2%</div><div class="metric-lab">ACCURACY</div></div>
-                <div class="metric-item"><div class="metric-val">0.991</div><div class="metric-lab">F1</div></div>
+                <div class="metric-item"><div class="metric-val" id="active-model-acc"></div><div class="metric-lab">ACCURACY</div></div>
+                <div class="metric-item"><div class="metric-val" id="active-model-f1"></div><div class="metric-lab">F1</div></div>
               </div>
             </div>
           </div>
@@ -1353,6 +1390,10 @@ canvas { border-radius: var(--r); }
 
 <!-- Chart.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<!-- BERT backend connector: defines checkBertBackend(), callBertAPI(), renderEngineDetails() -->
+<script src="bert_connector.js"></script>
+<!-- Measured model metrics, generated from results/*.json: defines MEASURED_MODELS -->
+<script src="model_results.js"></script>
 
 <script>
 // ═══════════════════════════════════════════════════════════════════
@@ -1363,9 +1404,9 @@ const STATE = {
   apiKey: '',
   demoMode: false,
   analyses: [],
-  models: [
-    { id: 'claude-live', name: 'claude-sonnet-4-6 (Live API)', algorithm: 'Claude AI', accuracy: 0.992, f1: 0.991, roc: 0.998, isActive: true, trainedAt: new Date().toISOString(), rows: 'N/A' }
-  ],
+  // Real measured results, generated from results/*.json into model_results.js
+  // (scripts/export_frontend_results.py). Never typed by hand, never random.
+  models: MEASURED_MODELS,
   inputType: 'url',
   charts: {}
 };
@@ -1374,7 +1415,7 @@ const STATE = {
 function persist() {
   try {
     localStorage.setItem('phishguard_analyses', JSON.stringify(STATE.analyses));
-    localStorage.setItem('phishguard_models', JSON.stringify(STATE.models));
+    // Models are not saved: the list always comes from model_results.js.
     localStorage.setItem('phishguard_user', JSON.stringify(STATE.user));
   } catch(e) {}
 }
@@ -1382,8 +1423,8 @@ function loadPersisted() {
   try {
     const a = localStorage.getItem('phishguard_analyses');
     if (a) STATE.analyses = JSON.parse(a);
-    const m = localStorage.getItem('phishguard_models');
-    if (m) STATE.models = JSON.parse(m);
+    // Older versions stored a model list with invented metrics; remove it.
+    localStorage.removeItem('phishguard_models');
   } catch(e) {}
 }
 
@@ -1493,7 +1534,7 @@ function saveApiKey() {
 function skipApiKey() {
   STATE.demoMode = true;
   document.getElementById('api-key-modal').classList.add('hidden');
-  showToast('Demo mode active. Analysis results will be simulated.', 'success');
+  showToast('No API key: the BERT backend is used, with the heuristic as fallback.', 'success');
   initApp();
 }
 
@@ -1511,7 +1552,7 @@ function clearApiKey() {
   STATE.demoMode = true;
   document.getElementById('settings-api-key').value = '';
   updateSettingsPage();
-  showToast('API key cleared. Demo mode active.', 'success');
+  showToast('API key cleared. BERT backend first, heuristic fallback.', 'success');
 }
 
 function updateSettingsPage() {
@@ -1667,16 +1708,38 @@ async function runAnalysis() {
     content = document.getElementById('input-email-body').value.trim();
   }
 
+  // Engine choice: 1) local BERT backend if reachable (checked again now, in
+  // case it was started after the page loaded); 2) otherwise the existing
+  // path: Claude API if a key is configured, else the in-browser heuristic.
+  // Any failure falls back to the heuristic, and the reason is shown.
   let result;
-  try {
-    if (STATE.demoMode || !STATE.apiKey) {
-      result = await simulateAnalysis(content, STATE.inputType, headers);
-    } else {
-      result = await callClaudeAPI(content, STATE.inputType, headers);
+  let fallbackReason = '';
+  if (BERT_API.online || await checkBertBackend()) {
+    try {
+      result = await callBertAPI(content, STATE.inputType, headers);
+    } catch (err) {
+      fallbackReason = `BERT backend error (${err.message}) — heuristic fallback used.`;
+      showToast('BERT backend error — using heuristic fallback', 'error');
     }
-  } catch (err) {
-    result = await simulateAnalysis(content, STATE.inputType, headers);
-    showToast('API error — using heuristic fallback', 'error');
+  } else {
+    fallbackReason = 'BERT backend offline — fallback engine used.';
+  }
+  if (!result) {
+    try {
+      if (STATE.demoMode || !STATE.apiKey) {
+        result = await simulateAnalysis(content, STATE.inputType, headers);
+        result.engine = 'heuristic';
+      } else {
+        result = await callClaudeAPI(content, STATE.inputType, headers);
+        result.engine = 'claude';
+      }
+    } catch (err) {
+      result = await simulateAnalysis(content, STATE.inputType, headers);
+      result.engine = 'heuristic';
+      fallbackReason = 'Claude API error — heuristic fallback used.';
+      showToast('API error — using heuristic fallback', 'error');
+    }
+    result.fallbackReason = fallbackReason;
   }
 
   document.getElementById('result-loading').style.display = 'none';
@@ -1691,7 +1754,12 @@ async function runAnalysis() {
     verdict: result.verdict,
     confidence: result.confidence,
     indicators: result.indicators,
-    explanation: result.explanation
+    explanation: result.explanation,
+    engine: result.engine,
+    model: result.model || '',
+    phishProb: result.phishProb,
+    topTokens: result.topTokens || [],
+    attributionMethod: result.attributionMethod || ''
   };
   STATE.analyses.unshift(record);
   persist();
@@ -1784,7 +1852,7 @@ async function simulateAnalysis(content, inputType, headers = '') {
     ];
     urlPhishSignals.forEach(s => {
       phishScore += s.check ? s.score * 0.9 : 0;
-      indicators.push({ name: s.name, score: s.check ? s.score : Math.floor(Math.random() * 30), direction: s.check ? 'risk' : 'safe' });
+      indicators.push({ name: s.name, score: s.check ? s.score : 0, direction: s.check ? 'risk' : 'safe' });  // rules that did not fire score 0 (was random)
     });
 
     const safeSignals = [
@@ -1809,7 +1877,7 @@ async function simulateAnalysis(content, inputType, headers = '') {
     ];
     emailPhishSignals.forEach(s => {
       phishScore += s.check ? s.score * 0.85 : 0;
-      indicators.push({ name: s.name, score: s.check ? s.score : Math.floor(Math.random() * 25), direction: s.check ? 'risk' : 'safe' });
+      indicators.push({ name: s.name, score: s.check ? s.score : 0, direction: s.check ? 'risk' : 'safe' });  // rules that did not fire score 0 (was random)
     });
 
     const safeEmailSignals = [
@@ -1838,6 +1906,10 @@ async function simulateAnalysis(content, inputType, headers = '') {
   }
 
   indicators.sort((a,b) => b.score - a.score);
+  // Keep only rules that fired (score > 0). A rule that did not fire is not
+  // evidence of anything, so it must not be listed or cited as a "safe" reason.
+  // (Does not change the phishing score or verdict computed above.)
+  indicators.splice(0, indicators.length, ...indicators.filter(i => i.score > 0));
 
   const explanations = {
     phishing: `This ${inputType} exhibits multiple high-confidence phishing indicators. ${indicators.filter(i=>i.direction==='risk').slice(0,2).map(i=>i.name).join(' and ')} are strongly associated with credential harvesting campaigns. Exercise extreme caution — do not interact with this content.`,
@@ -1852,7 +1924,10 @@ async function simulateAnalysis(content, inputType, headers = '') {
 //  RENDER RESULT
 // ═══════════════════════════════════════════════════════════════════
 function renderResult(result) {
-  const { verdict, confidence, indicators, explanation } = result;
+  const { confidence, explanation } = result;
+  const indicators = Array.isArray(result.indicators) ? result.indicators : [];
+  // Only known verdicts are used as CSS classes / labels (values can come from a backend).
+  const verdict = ['phishing', 'legitimate', 'suspicious'].includes(result.verdict) ? result.verdict : 'suspicious';
 
   const banner = document.getElementById('verdict-banner');
   banner.className = 'verdict-banner ' + verdict;
@@ -1861,24 +1936,31 @@ function renderResult(result) {
   document.getElementById('verdict-icon').textContent = icons[verdict] || '?';
   document.getElementById('verdict-label').textContent = verdict.toUpperCase();
   document.getElementById('verdict-subtitle').textContent =
-    verdict === 'phishing' ? 'Confirmed phishing threat detected' :
-    verdict === 'suspicious' ? 'Suspicious content — proceed with caution' :
-    'No phishing indicators found';
+    verdict === 'phishing' ? 'Classified as phishing — do not interact' :
+    verdict === 'suspicious' ? 'Uncertain result — proceed with caution' :
+    'Classified as legitimate';
   document.getElementById('conf-number').textContent = confidence + '%';
 
+  // Every value from the engine goes through escHtml() before it becomes HTML.
   const list = document.getElementById('indicators-list');
-  list.innerHTML = '';
+  list.innerHTML = indicators.length ? '' :
+    '<div class="indicator-row"><span class="indicator-name">No rule-based indicators fired for this input.</span></div>';
   indicators.forEach(ind => {
-    const barClass = ind.score >= 70 ? 'high' : ind.score >= 40 ? 'med' : 'low';
+    const score = Math.max(0, Math.min(100, Number(ind.score) || 0));
+    // Bar colour follows the direction: a strong "safe" signal must not look alarming.
+    const barClass = ind.direction === 'safe' ? 'safe' : score >= 70 ? 'high' : score >= 40 ? 'med' : 'low';
+    const evidence = ind.evidence ? `<span class="indicator-evidence">${escHtml(ind.evidence)}</span>` : '';
+    const title = ind.basis ? ` title="${escHtml(ind.basis)}"` : '';
     list.innerHTML += `
-      <div class="indicator-row">
+      <div class="indicator-row"${title}>
         <span style="font-size:12px; margin-right:4px;">${ind.direction==='risk'?'🔴':'🟢'}</span>
-        <span class="indicator-name">${ind.name}</span>
-        <div class="indicator-bar-wrap"><div class="indicator-bar ${barClass}" style="width:${ind.score}%"></div></div>
-        <span class="indicator-score">${ind.score}</span>
+        <span class="indicator-name">${escHtml(ind.name)}${evidence}</span>
+        <div class="indicator-bar-wrap"><div class="indicator-bar ${barClass}" style="width:${score}%"></div></div>
+        <span class="indicator-score">${score}</span>
       </div>`;
   });
 
+  renderEngineDetails(result);
   document.getElementById('explanation-text').textContent = explanation;
   document.getElementById('result-content').classList.add('visible');
   showToast(verdict === 'phishing' ? '⚠ Phishing threat detected!' : verdict === 'suspicious' ? '⚡ Suspicious content flagged' : '✓ Legitimate — low risk', verdict === 'phishing' ? 'error' : 'success');
@@ -1918,7 +2000,7 @@ function renderRecentTable() {
       <td>${formatTs(a.timestamp)}</td>
       <td><span class="badge badge-${a.inputType}">${a.inputType.toUpperCase()}</span></td>
       <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:var(--mono); font-size:11px;">${escHtml(a.content)}</td>
-      <td><span class="badge badge-${a.verdict}">${a.verdict.toUpperCase()}</span></td>
+      <td><span class="badge badge-${escHtml(a.verdict)}">${escHtml(a.verdict).toUpperCase()}</span></td>
       <td style="font-family:var(--mono); font-size:12px;">${a.confidence}%</td>
     </tr>`).join('');
 }
@@ -2003,9 +2085,9 @@ function renderHistory() {
       <td>${formatTs(a.timestamp)}</td>
       <td><span class="badge badge-${a.inputType}">${a.inputType.toUpperCase()}</span></td>
       <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:var(--mono); font-size:11px;">${escHtml(a.content)}</td>
-      <td><span class="badge badge-${a.verdict}">${a.verdict.toUpperCase()}</span></td>
+      <td><span class="badge badge-${escHtml(a.verdict)}">${escHtml(a.verdict).toUpperCase()}</span></td>
       <td style="font-family:var(--mono); font-size:12px;">${a.confidence}%</td>
-      <td style="font-size:11px; color:var(--text3);">${a.indicators?.[0]?.name || '—'}</td>
+      <td style="font-size:11px; color:var(--text3);">${escHtml(a.indicators?.[0]?.name) || '—'}</td>
       <td><button class="btn btn-ghost btn-sm" onclick="viewDetail('${a.id}')">View</button></td>
     </tr>`).join('');
 }
@@ -2021,7 +2103,9 @@ function viewDetail(id) {
     switchInputType('email');
     document.getElementById('input-email-body').value = a.content;
   }
-  renderResult({ verdict: a.verdict, confidence: a.confidence, indicators: a.indicators || [], explanation: a.explanation || '' });
+  renderResult({ verdict: a.verdict, confidence: a.confidence, indicators: a.indicators || [], explanation: a.explanation || '',
+                 engine: a.engine, model: a.model, phishProb: a.phishProb, topTokens: a.topTokens || [],
+                 attributionMethod: a.attributionMethod, fallbackReason: 'Saved result from history (not re-analysed).' });
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -2076,114 +2160,34 @@ function processCSVFile(file) {
   reader.readAsText(file);
 }
 
+// Training from the web interface (FR-04) is not implemented in this build.
+// An earlier version simulated a training run and then displayed RANDOM
+// metrics as if a model had been trained. That was removed so the app never
+// shows invented results. Models are trained with scripts/train_classical.py
+// and scripts/train_bert.py; their real test-set metrics are listed under
+// "Registered Models" (generated from results/*.json).
 function startTraining() {
-  if (!currentCSV) { showToast('Please upload a dataset first', 'error'); return; }
-
-  const algo = document.getElementById('train-algorithm').value;
-  const split = document.getElementById('train-split').value;
-
-  document.getElementById('training-idle').style.display = 'none';
-  document.getElementById('training-results').style.display = 'none';
-  document.getElementById('training-active').style.display = 'block';
-  document.getElementById('train-btn').disabled = true;
-
-  const steps = [
-    { text: 'Validating dataset schema...', pct: 8 },
-    { text: 'Checking class distribution...', pct: 15 },
-    { text: 'Applying SMOTE oversampling...', pct: 25 },
-    { text: 'Extracting URL/text features...', pct: 38 },
-    { text: 'Fitting TF-IDF vectoriser...', pct: 48 },
-    { text: `Training ${algo.replace('_',' ')} model...`, pct: 62 },
-    { text: 'Running cross-validation...', pct: 74 },
-    { text: 'Evaluating on test split...', pct: 85 },
-    { text: 'Computing SHAP values...', pct: 93 },
-    { text: 'Saving model artifact...', pct: 100 }
-  ];
-
-  let step = 0;
-  const log = document.getElementById('train-log');
-  log.innerHTML = '';
-
-  function runStep() {
-    if (step >= steps.length) {
-      finishTraining(algo);
-      return;
-    }
-    const s = steps[step];
-    document.getElementById('train-status-text').textContent = s.text;
-    document.getElementById('train-pct').textContent = s.pct + '%';
-    document.getElementById('train-progress-bar').style.width = s.pct + '%';
-    log.innerHTML += `<div class="terminal-line">${s.text}</div>`;
-    log.scrollTop = log.scrollHeight;
-    step++;
-    setTimeout(runStep, 400 + Math.random() * 600);
-  }
-  runStep();
-}
-
-function finishTraining(algo) {
-  const metrics = {
-    accuracy: (0.92 + Math.random() * 0.065).toFixed(4),
-    precision: (0.91 + Math.random() * 0.07).toFixed(4),
-    recall: (0.90 + Math.random() * 0.08).toFixed(4),
-    f1: (0.91 + Math.random() * 0.07).toFixed(4),
-    roc: (0.96 + Math.random() * 0.035).toFixed(4)
-  };
-
-  const grid = document.getElementById('metrics-grid');
-  grid.innerHTML = Object.entries(metrics).map(([k,v]) => `
-    <div style="text-align:center; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:10px;">
-      <div style="font-family:var(--mono); font-size:18px; font-weight:700; color:var(--accent);">${parseFloat(v)*100 > 10 ? (parseFloat(v)*100).toFixed(1)+'%' : v}</div>
-      <div style="font-size:9px; color:var(--text3); font-family:var(--mono); letter-spacing:1px; margin-top:3px;">${k.toUpperCase()}</div>
-    </div>`).join('');
-
-  document.getElementById('training-results').style.display = 'block';
-  document.getElementById('train-btn').disabled = false;
-
-  STATE.pendingModel = { metrics, algo, dataset: currentCSV.filename, rows: currentCSV.rowCount };
-  showToast('✓ Training complete! Review metrics and deploy.', 'success');
-}
-
-function deployModel() {
-  if (!STATE.pendingModel) return;
-  const { metrics, algo, dataset, rows } = STATE.pendingModel;
-  const version = algo.replace('_','') + '_v' + (STATE.models.length + 1) + '.0.0';
-
-  STATE.models.forEach(m => m.isActive = false);
-  STATE.models.unshift({
-    id: 'model_' + Date.now(),
-    name: version,
-    algorithm: algo.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase()),
-    accuracy: parseFloat(metrics.accuracy),
-    f1: parseFloat(metrics.f1),
-    roc: parseFloat(metrics.roc),
-    isActive: true,
-    trainedAt: new Date().toISOString(),
-    rows
-  });
-
-  persist();
-  renderModels();
-  STATE.pendingModel = null;
-  document.getElementById('training-active').style.display = 'none';
-  document.getElementById('training-results').style.display = 'none';
-  document.getElementById('training-idle').style.display = 'block';
-  document.getElementById('training-idle').innerHTML = 'Model deployed successfully! ✓<br><span style="font-size:11px;opacity:0.6;">Upload a new dataset to train another model.</span>';
-  showToast('🚀 Model deployed as active!', 'success');
+  const idle = document.getElementById('training-idle');
+  idle.style.display = 'block';
+  idle.textContent = 'Training from the web interface is not implemented in this build. ' +
+    'Models are trained with scripts/train_classical.py and scripts/train_bert.py; ' +
+    'their measured test-set results are listed under Registered Models.';
+  showToast('Web training is not implemented: see Registered Models for real results', 'error');
 }
 
 function renderModels() {
   const list = document.getElementById('models-list');
   if (!STATE.models.length) { list.innerHTML = '<div style="text-align:center; color:var(--text3); font-family:var(--mono); font-size:12px; padding:20px;">No models registered.</div>'; return; }
-  list.innerHTML = STATE.models.slice(0, 5).map(m => `
-    <div class="model-card ${m.isActive ? 'active-model' : ''}">
+  list.innerHTML = STATE.models.map(m => `
+    <div class="model-card ${m.isActive ? 'active-model' : ''}"${m.note ? ` title="${escHtml(m.note)}"` : ''}>
       <div style="flex:1; min-width:0;">
-        <div class="model-name">${escHtml(m.name)} ${m.isActive ? '<span style="color:var(--safe); font-size:10px; margin-left:6px;">● ACTIVE</span>' : ''}</div>
-        <div class="model-meta">${m.algorithm} · ${typeof m.rows === 'number' ? m.rows.toLocaleString() + ' rows' : m.rows} · ${formatTs(m.trainedAt)}</div>
+        <div class="model-name">${escHtml(m.name)} ${m.isActive ? '<span style="color:var(--safe); font-size:10px; margin-left:6px;">● SERVED BY BACKEND</span>' : ''}</div>
+        <div class="model-meta">${escHtml(m.algorithm)} · test set ${Number(m.testRows).toLocaleString()} rows · ${escHtml(m.source)}${m.note ? ' · †' : ''}</div>
       </div>
       <div class="model-metrics">
         <div class="metric-item"><div class="metric-val">${(m.accuracy*100).toFixed(1)}%</div><div class="metric-lab">ACC</div></div>
-        <div class="metric-item"><div class="metric-val">${m.f1.toFixed(3)}</div><div class="metric-lab">F1</div></div>
+        <div class="metric-item"><div class="metric-val">${Number(m.f1).toFixed(3)}</div><div class="metric-lab">F1</div></div>
+        <div class="metric-item"><div class="metric-val">${(m.fpr*100).toFixed(1)}%</div><div class="metric-lab">FPR</div></div>
       </div>
     </div>`).join('');
 }
@@ -2240,16 +2244,36 @@ function formatTs(ts) {
   return d.toLocaleDateString('en-GB', {day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
 }
 function escHtml(str) {
-  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  // String(...) so numbers and null/undefined are handled; ' is escaped too
+  // so the result is also safe inside single-quoted attributes.
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 // ═══════════════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════════════
+// Settings page "Active Model" card: the model backend/app.py serves by
+// default, with its measured test-set results (from model_results.js).
+function renderActiveModel() {
+  const m = STATE.models.find(x => x.isActive);
+  if (!m) return;
+  document.getElementById('active-model-name').textContent = m.name;
+  document.getElementById('active-model-meta').textContent =
+    `${m.algorithm} · served by the local backend · measured on ${Number(m.testRows).toLocaleString()} test rows`;
+  document.getElementById('active-model-acc').textContent = (m.accuracy * 100).toFixed(1) + '%';
+  document.getElementById('active-model-f1').textContent = Number(m.f1).toFixed(3);
+}
+
 function initApp() {
   updateDashboard();
   renderModels();
+  renderActiveModel();
   nav('dashboard');
+  // Show whether the local BERT backend is reachable, and re-check every 30 s
+  // so starting or stopping the backend is reflected without a page reload.
+  checkBertBackend();
+  setInterval(checkBertBackend, 30000);
 }
 </script>
 </body>

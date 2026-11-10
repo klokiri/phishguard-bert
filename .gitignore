@@ -38,3 +38,6 @@ phishguard-ai-starter.zip
 
 # Coverage data file (results/coverage.json holds the committed figure)
 .coverage
+
+# Local editor / Claude Code launch settings
+.claude/
