@@ -11,7 +11,7 @@
 | 3 Evaluation and baselines | done | `phase-3-baselines` |
 | 4 BERT | done | `phase-4-bert` |
 | 5 Backend | done | `phase-5-backend` |
-| 6 Frontend | not started | |
+| 6 Frontend | done | `phase-6-frontend` |
 | 7 Evaluation assets, report, cleanup | not started | |
 
 ---
@@ -375,6 +375,25 @@ Run: `.venv/bin/python -m backend.app` (BERT; `PHISHGUARD_MODEL=heuristic` or `c
 **Latency (single user, not a load test):** typical request 25–215 ms including attribution; worst case seen, a long HTML page (60 words × 512 tokens re-scored), 973 ms. NFR-04's 50-user load test was not run.
 
 **Not done (state in the report):** no authentication (FR-02, NFR-01), no TLS (NFR-02), no immutable audit log (NFR-10), no OpenAPI spec file (part of NFR-12), rate limit is per IP only (no per-user limit, as there are no users), no load test (NFR-04).
+
+---
+
+## Phase 6 — Frontend (2026-11-09 to 2026-11-10)
+
+**Integration** (`frontend/PhishGuard_AI.html`, `frontend/bert_connector.js`)
+- The connector only defines functions; nothing overrides the existing `onclick="runAnalysis()"`. `runAnalysis()` picks the engine: **local BERT backend first**; if it is offline or errors, the app's existing path (Claude API if the user set a key, else the in-browser heuristic). The fallback reason is shown on the result card.
+- Backend status badge on the Analyse page (checked at start and every 30 s).
+- New "Model Details" block: engine, model name, phishing probability (">99.9%"/"<0.1%" at the extremes), server latency, and the words that most changed the model's score with the method named ("occlusion (leave-one-word-out), effect in log-odds").
+- Indicators show their evidence and data basis (tooltip); "safe" indicators have green bars; when nothing fires the card says so.
+- All engine-derived text is inserted with `textContent` or `escHtml()`. `escHtml()` now escapes `'` and handles non-strings. Previously unescaped spots fixed: indicator names in `renderResult`, verdict and top indicator in the history/dashboard tables.
+
+**Invented numbers removed from the app (Kasim's decision).** The original UI contained (1) a "Model Training" page that simulated a training run and displayed *random* metrics (accuracy 0.92–0.985 etc.), then saved them as a deployed model, and (2) a hard-coded model registry and "Active Model" card claiming Claude accuracy 0.992 / F1 0.991 / ROC 0.998. Both are gone: the training button now explains that web training (FR-04) is not implemented, and the registry/active-model card show the real metrics of all six models, generated from `results/*.json` by `scripts/export_frontend_results.py` into `frontend/model_results.js`. The old stored model list is deleted from browser storage on load. Other misleading texts were corrected: "Computing SHAP explanations" (no SHAP is computed), "Confirmed phishing threat", "Anthropic API Key Required", "results will be simulated". The fallback heuristic no longer lists rules that did not fire (they had random scores, and could be cited as reasons for a "legitimate" verdict); its score and verdict are unchanged (JS/Python parity re-checked: 0 mismatches).
+
+**Browser tests**
+- **Local server** (`python -m http.server`, built-in browser): badge "BERT backend online · phishguard-bert-base · MPS"; the app's "Phishing email" sample → phishing, >99.9%, 760 ms, 5 indicators with evidence, word chips; confidence shows 99.9% (backend now rounds down, so never 100%).
+- **Script-injection check:** URL `http://<img src=x onerror="window.__xss=true">.login-secure.tk/verify` → the payload appears as plain text in the indicator evidence; 0 `<img>` elements in the result, history or dashboard; the script never ran.
+- **`file://`** (headless Chrome via `scripts/browser_test.mjs`, throw-away profile): page loads from disk, both scripts load, badge online, phishing email and GitHub URL both analysed by BERT (phishing / legitimate). The built-in browser pane only shows `file://` pages as static snapshots, so it could not run this test.
+- **Backend stopped** (`file://`): badge "BERT backend offline · using fallback engine"; both analyses fall back to the heuristic with the note "BERT backend offline — fallback engine used."; probability shown as "not available" (the heuristic's score is not a probability).
 
 ---
 

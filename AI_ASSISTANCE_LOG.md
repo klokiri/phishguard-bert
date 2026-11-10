@@ -74,3 +74,15 @@ Decisions made by Kasim: max_length 512, up to 3 epochs. Training ran on Kasim's
 | `tests/test_backend.py`, `scripts/coverage_report.py`, `results/coverage.json` | 53 API/unit tests; coverage measurement for NFR-09 | `1ec263b` |
 | `src/models/classical.py` (change) | Lazy xgboost import (fixes an OpenMP crash) | `1ec263b` |
 | `PROGRESS.md`, `README.md`, `AI_ASSISTANCE_LOG.md`, `.gitignore` | Phase 5 write-up | phase-closing commit |
+
+## Phase 6 — Frontend (2026-11-09 to 2026-11-10)
+
+| File | What it is | Commit |
+|---|---|---|
+| `frontend/bert_connector.js` | Rewritten connector: backend health check, API call, result details (textContent only) | `c97a517` |
+| `frontend/PhishGuard_AI.html` (changes) | Engine selection in `runAnalysis()`, status badge, Model Details block, escaping fixes, removal of simulated training metrics and invented model numbers, corrected UI texts | `c97a517` |
+| `scripts/export_frontend_results.py`, `frontend/model_results.js` | Generates the app's model list from `results/*.json` (the JS file is generated, not hand-written) | `c97a517` |
+| `scripts/browser_test.mjs` | Headless-Chrome test of the page opened via `file://` | `c97a517` |
+| `backend/app.py`, `tests/test_backend.py` (changes) | Confidence rounded down; test for it | `c97a517` |
+
+The original HTML (Kasim's app) is in the baseline commit `48e2bed`; the decision to remove the simulated training metrics was Kasim's.

@@ -48,6 +48,20 @@ Downloads `train.json` and `test.json` (~551 MB) from [ealvaradob/phishing-datas
 
 Serves the fine-tuned BERT model at http://127.0.0.1:5000/api/v1 (endpoints: `health`, `model/info`, `analyse`, `batch`, `history`, `stats`). To swap models without changing code, set `PHISHGUARD_MODEL=heuristic` or `PHISHGUARD_MODEL=classical`. All settings are in `src/config.py`. Each response contains the phishing probability, rule-based indicators with their evidence and data-derived scores, the words that most changed the model's score (leave-one-word-out occlusion), and an explanation built only from what fired.
 
+## Running the web app
+
+Start the backend (above), then either open `frontend/PhishGuard_AI.html` directly in a browser, or serve it:
+
+```bash
+.venv/bin/python -m http.server 8000 --bind 127.0.0.1 --directory frontend
+```
+
+and open http://localhost:8000/PhishGuard_AI.html. Log in with the pre-filled demo account. The Analyse page shows whether the BERT backend is online. If it isn't, the app falls back to the in-browser heuristic, or to the Claude API if you enter a key. The "Registered Models" list shows real measured metrics from `frontend/model_results.js`, which is generated from `results/*.json`:
+
+```bash
+.venv/bin/python scripts/export_frontend_results.py
+```
+
 ## Reproducing the results
 
 Every number comes from a file in `results/`, produced by one command:
@@ -76,7 +90,7 @@ Metric definitions: precision, recall and F1 are for the phishing class (binary)
 ## Repository layout
 
 ```
-frontend/       PhishGuard_AI.html, bert_connector.js
+frontend/       PhishGuard_AI.html, bert_connector.js, model_results.js (generated)
 backend/        Flask API: app.py, model_service.py, indicators.py, attribution.py, explain.py
 src/            data.py (split), evaluate.py (shared metrics), features.py (from reference), models/
 tests/          pytest tests
