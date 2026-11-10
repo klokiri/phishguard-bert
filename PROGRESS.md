@@ -12,7 +12,7 @@
 | 4 BERT | done | `phase-4-bert` |
 | 5 Backend | done | `phase-5-backend` |
 | 6 Frontend | done | `phase-6-frontend` |
-| 7 Evaluation assets, report, cleanup | not started | |
+| 7 Evaluation assets, report, cleanup | done | `phase-7-report` |
 
 ---
 
@@ -394,6 +394,32 @@ Run: `.venv/bin/python -m backend.app` (BERT; `PHISHGUARD_MODEL=heuristic` or `c
 - **Script-injection check:** URL `http://<img src=x onerror="window.__xss=true">.login-secure.tk/verify` → the payload appears as plain text in the indicator evidence; 0 `<img>` elements in the result, history or dashboard; the script never ran.
 - **`file://`** (headless Chrome via `scripts/browser_test.mjs`, throw-away profile): page loads from disk, both scripts load, badge online, phishing email and GitHub URL both analysed by BERT (phishing / legitimate). The built-in browser pane only shows `file://` pages as static snapshots, so it could not run this test.
 - **Backend stopped** (`file://`): badge "BERT backend offline · using fallback engine"; both analyses fall back to the heuristic with the note "BERT backend offline — fallback engine used."; probability shown as "not available" (the heuristic's score is not a probability).
+
+---
+
+## Phase 7 — Evaluation assets, report draft, cleanup (2026-11-10)
+
+- **Figures** (`scripts/make_figures.py`, replacing the crashing `day6_evaluation.py`): `results/figures/comparison_table.{md,csv}` (all six models, same test set), `confusion_matrices.png`, `roc_curves.png` (full and zoom), `latency.png`, `scheme_artefact.png`. Colours were checked with the dataviz palette validator (all checks pass; the contrast warning is handled with a legend plus direct labels or a table). Each figure was inspected; one label collision was found and fixed.
+- **URL-scheme counterfactual** (`scripts/scheme_artefact.py` → `results/scheme_artefact.json`): every test URL without a scheme is scored as-is and with `https://` added. All five learned models flag more legitimate URLs with `https://`; the Random Forest on hand-crafted features is by far the most affected (see `results/report_draft.md`, section 5). This is the main new limitation: test-set false-positive rates understate the false alarms for real, full URLs.
+- **Error analysis** (`scripts/error_analysis.py` → `results/error_analysis.json`): bert-base false positives/negatives counted by type and compared with the author's model; 10 FP and 10 FN drawn at random (seed 42). The per-example notes (`results/error_analysis_notes.json`) are the AI assistant's interpretation after reading each example — **Kasim should review them**. Recurring themes: genuine login/payment pages that look like phishing replicas, label noise (spam counted as phishing), redirect-only pages, URL-encoded lure words, and the scheme artefact.
+- **Report draft** (`scripts/make_report.py` → `results/report_draft.md`): methods, results, explainability, error analysis, limitations and the "Use of third-party work" paragraph. Every number is read from `results/` at generation time (the script contains none; it prints "NOT YET MEASURED" if a file is missing). Sentences that make a claim (which models meet the target, which models are hurt by `https://`, the weakest sample type, whether the best checkpoint was the last one) are computed too. It is a draft for Kasim to rewrite in his own words.
+- **README**: setup, running the backend and web app, a command for every results file, the tag timeline, and attribution. It contains no metric values on purpose.
+- **Not done:** the out-of-distribution test set (first item in the cut order). Stated as a limitation in the report draft.
+
+### Definition of done — status
+
+- [x] Public GitHub repo (Kasim chose public instead of the recommended private); every phase has commits and an annotated tag, all pushed; working tree clean.
+- [x] No secrets, no model weights, no file over 50 MB in history (checked before every commit).
+- [x] `scripts/check_env.py` shows the GPU detected — as **MPS** (Apple M4 Pro); there is no CUDA on this machine.
+- [x] `results/split_manifest.json` exists; leakage handling documented (Phase 2, report draft §1 and §6).
+- [x] Five models with results on the same test set, plus the pre-trained BERT evaluated on its own held-out set with the author's checkpoint-selection caveat.
+- [x] Fine-tuned BERT saved locally (`models/phishguard-bert-base/`); training history and full config committed.
+- [x] Backend runs, tests pass, real coverage in `results/coverage.json`.
+- [x] `frontend/PhishGuard_AI.html` uses BERT with a working fallback; indicators and tokens are real.
+- [x] All figures and `report_draft.md` generated from results files, no hard-coded numbers.
+- [x] `README.md`, `NOTICE`, `AI_ASSISTANCE_LOG.md`, `PROGRESS.md` up to date.
+- [ ] Out-of-distribution test set — not done (cut first, as planned).
+- [ ] Proposal requirements outside this build (FR-02, FR-04, NFR-01/02/04 load test/05/06/07/08/10, OpenAPI file) — listed in the report draft §6.
 
 ---
 

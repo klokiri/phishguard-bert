@@ -26,6 +26,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
@@ -84,6 +85,16 @@ def main(model: str) -> None:
               f"-> with https:// {flag_https.mean():.4f}")
 
     all_results = json.loads(OUT.read_text()) if OUT.exists() else {}
+    # The training-data fact behind the experiment (measured on train only).
+    train = pd.read_parquet(REPO_ROOT / "data" / "splits" / "train.parquet", columns=["text", "label", "type_guess"])
+    train_urls = train[train["type_guess"] == "url"]
+    has = train_urls["text"].str.match(HAS_SCHEME)
+    all_results["_training_urls_with_scheme"] = {
+        "benign_share": round(float(has[train_urls["label"] == 0].mean()), 4),
+        "phishing_share": round(float(has[train_urls["label"] == 1].mean()), 4),
+        "benign_urls": int((train_urls["label"] == 0).sum()),
+        "phishing_urls": int((train_urls["label"] == 1).sum()),
+    }
     all_results["_about"] = ("Test URLs without a scheme, scored as-is and with 'https://' prepended. "
                              "For benign URLs, 'flagged' = false positive rate; for phishing URLs, = recall. "
                              f"Decision threshold {DECISION_THRESHOLD}. Command: "

@@ -86,3 +86,15 @@ Decisions made by Kasim: max_length 512, up to 3 epochs. Training ran on Kasim's
 | `backend/app.py`, `tests/test_backend.py` (changes) | Confidence rounded down; test for it | `c97a517` |
 
 The original HTML (Kasim's app) is in the baseline commit `48e2bed`; the decision to remove the simulated training metrics was Kasim's.
+
+## Phase 7 — Evaluation assets, report draft, cleanup (2026-11-10)
+
+| File | What it is | Commit |
+|---|---|---|
+| `scripts/make_figures.py`, `results/figures/*` | Comparison table and figures generated from `results/` | `a84b266` |
+| `scripts/scheme_artefact.py`, `results/scheme_artefact.json` | Counterfactual `https://` experiment on test URLs | `a84b266` + phase-closing commit |
+| `scripts/error_analysis.py`, `results/error_analysis.json` | Error counts and 20 randomly sampled errors | `a84b266` |
+| `results/error_analysis_notes.json` | **AI-written notes** on each sampled error (interpretations, to be reviewed by Kasim) | `a84b266` |
+| `scripts/make_report.py`, `results/report_draft.md` | Report draft generated only from `results/`; a starting point to be rewritten by Kasim | phase-closing commit |
+| `README.md`, `PROGRESS.md`, `AI_ASSISTANCE_LOG.md` | Final documentation | phase-closing commit |
+| removal of `PhishGuard_BERT/` | Superseded scaffold removed (still in git history) | cleanup commit |

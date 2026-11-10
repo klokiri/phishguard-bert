@@ -1,5 +1,11 @@
 {
   "_about": "Test URLs without a scheme, scored as-is and with 'https://' prepended. For benign URLs, 'flagged' = false positive rate; for phishing URLs, = recall. Decision threshold 0.5. Command: .venv/bin/python scripts/scheme_artefact.py <model>",
+  "_training_urls_with_scheme": {
+    "benign_share": 0.1018,
+    "benign_urls": 15890,
+    "phishing_share": 0.4508,
+    "phishing_urls": 13968
+  },
   "bert_base": {
     "benign": {
       "flagged_as_phishing_plain": 0.014,

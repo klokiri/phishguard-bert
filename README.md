@@ -2,7 +2,9 @@
 
 Final-year capstone by Kasim: an explainable phishing detector for emails and URLs, with a BERT model, classical baselines, a Flask backend and the PhishGuard AI web front end.
 
-> Work in progress. See [PROGRESS.md](PROGRESS.md) for status and [AI_ASSISTANCE_LOG.md](AI_ASSISTANCE_LOG.md) for AI-assistance declarations. Setup and reproduction steps are added as each phase lands. No results have been measured yet.
+**Results:** [results/figures/comparison_table.md](results/figures/comparison_table.md) compares all six models on one held-out test set, and the figures are in [results/figures/](results/figures/). [results/report_draft.md](results/report_draft.md) is a draft of the methods, results, error analysis and limitations, generated from the results files. This README deliberately contains no metric values: every number lives in, and is read from, `results/`.
+
+**Project log:** [PROGRESS.md](PROGRESS.md) holds the decisions and findings for every phase. [AI_ASSISTANCE_LOG.md](AI_ASSISTANCE_LOG.md) declares which files were AI-generated.
 
 ## Setup (macOS, Apple Silicon)
 
@@ -80,6 +82,14 @@ Every number comes from a file in `results/`, produced by one command:
 | `results/bert_base_training_config.json` (after training) | `.venv/bin/python scripts/export_training_config.py` |
 | `results/indicator_stats.json` (training split only) | `.venv/bin/python scripts/build_indicator_stats.py` |
 | `results/coverage.json` (NFR-09) | `.venv/bin/python scripts/coverage_report.py` |
+| `results/scheme_artefact.json` (one model per run) | `.venv/bin/python scripts/scheme_artefact.py <model>` for each of `heuristic tfidf_logreg tfidf_xgboost features_rf bert_base bert_pretrained` |
+| `results/error_analysis.json` | `.venv/bin/python scripts/error_analysis.py` |
+| `results/error_analysis_notes.json` | Hand-written (by the AI assistant, for Kasim's review): one note per sampled error |
+| `results/figures/*` (table + 4 figures) | `.venv/bin/python scripts/make_figures.py` |
+| `results/report_draft.md` | `.venv/bin/python scripts/make_report.py` |
+| `frontend/model_results.js` | `.venv/bin/python scripts/export_frontend_results.py` |
+
+Browser test of the page opened from disk (`file://`): see the header of `scripts/browser_test.mjs`.
 
 Model weights are not in git. `models/phishguard-bert-base/` is recreated by the training command and `models/pretrained/` by the evaluation script. GPU training on Apple MPS is not bit-for-bit deterministic, so a re-run gives very close but not necessarily identical numbers.
 
@@ -101,13 +111,31 @@ third_party/    Apache-2.0 licence of the reference project
 PhishGuard_BERT/  earlier draft scaffold, kept until fully replaced
 ```
 
+## Build timeline (git tags)
+
+Each phase ends with an annotated tag. Check one out with `git checkout <tag>`.
+
+| Tag | Date | Commit | What was completed |
+|---|---|---|---|
+| `phase-0-recon` | 2026-11-02 | `ebfcb68` | Recon, baseline import of the starting files, GitHub repo, schedule |
+| `phase-1-env` | 2026-11-02 | `b7fdd69` | Repository layout, Python 3.12 environment, pinned requirements, GPU (MPS) check |
+| `phase-2-data` | 2026-11-02 | `8bb82cc` | The published model's original train/test split, validation set, split manifest |
+| `phase-3-baselines` | 2026-11-07 | `6115ee7` | Shared evaluation, heuristic baseline (JS parity), three classical models |
+| `phase-4-bert` | 2026-11-09 | `6991504` | Published BERT evaluated on its held-out set; bert-base fine-tuned |
+| `phase-5-backend` | 2026-11-09 | `2b19147` | Config, ModelService, data-derived indicators, occlusion attribution, tests, coverage |
+| `phase-6-frontend` | 2026-11-10 | `f4e46aa` | Web app connected to the BERT backend with fallback; invented metrics removed |
+| `phase-7-report` | 2026-11-10 | (final commit) | Figures, scheme-artefact test, error analysis, report draft, scaffold removed |
+
 ## Third-party work
 
 This project builds on **Phishing Detection with BERT** by **Esteban Alvarado**, licensed under the Apache License 2.0:
 
 - Code: https://github.com/EstAlvB/Phishing-Detection-with-BERT — cloned locally into `reference/` (not committed) at commit `0b0b1a8c86e141bec6a4a1b7afab9fe796cd4b73`
 - Dataset: https://huggingface.co/datasets/ealvaradob/phishing-dataset — `train.json`/`test.json` at revision `23b8c17f4c9438c3e5d7729be349db049614a266` (MIT at that revision; Apache-2.0 later)
-- Model: https://huggingface.co/ealvaradob/bert-finetuned-phishing (revision `fa8fb73a007174c410ab7160d4e4c6e6b8d998d4`)
+- Model: https://huggingface.co/ealvaradob/bert-finetuned-phishing (revision `fa8fb73a007174c410ab7160d4e4c6e6b8d998d4`). It's evaluated here as a third-party baseline, and it is not this project's model.
+- `src/features.py` is his `features.py`, copied unchanged with an attribution header.
+
+Full licence text: [third_party/LICENSE-EstAlvB.md](third_party/LICENSE-EstAlvB.md); notice: [NOTICE](NOTICE). The "Use of third-party work" paragraph for the report is section 7 of `results/report_draft.md`.
 
 To recreate the local reference copy:
 
