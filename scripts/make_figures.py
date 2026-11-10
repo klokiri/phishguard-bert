@@ -9,7 +9,7 @@ Writes results/figures/:
   latency.png                                   mean ms per sample (batched)
   scheme_artefact.png                           false positives with/without https://
 
-Replaces PhishGuard_BERT/notebooks/day6_evaluation.py, which crashed
+Replaces the earlier scaffold's day6_evaluation.py (removed in Phase 7), which crashed
 (f1_score(weighted=True)) and evaluated only one model.
 
 Colours: one fixed colour per model (validated categorical palette, never

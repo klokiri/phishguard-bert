@@ -104,11 +104,10 @@ frontend/       PhishGuard_AI.html, bert_connector.js, model_results.js (generat
 backend/        Flask API: app.py, model_service.py, indicators.py, attribution.py, explain.py
 src/            data.py (split), evaluate.py (shared metrics), features.py (from reference), models/
 tests/          pytest tests
-scripts/        check_env.py and later training/evaluation scripts
-results/        committed evidence: split manifest, data summary, later metrics
+scripts/        environment check, training, evaluation, figures, report, browser test
+results/        committed evidence: split manifest, metrics, predictions, figures, report draft
 docs/           project proposal
 third_party/    Apache-2.0 licence of the reference project
-PhishGuard_BERT/  earlier draft scaffold, kept until fully replaced
 ```
 
 ## Build timeline (git tags)
