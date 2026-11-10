@@ -48,6 +48,16 @@ def num(x, digits=4):
     return NYM if x is None else f"{x:.{digits}f}"
 
 
+def wilson(successes: int, n: int, z: float = 1.96):
+    """95% Wilson score interval for a proportion (well-behaved near 0 and 1)."""
+    if n == 0:
+        return None, None
+    p = successes / n
+    centre = (p + z * z / (2 * n)) / (1 + z * z / n)
+    half = z * ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / (1 + z * z / n)
+    return max(0.0, centre - half), min(1.0, centre + half)
+
+
 def main() -> None:
     manifest, summary = load("split_manifest.json"), load("data_summary.json")
     res = {m: load(f"{m}.json") for m, _ in MODELS}
@@ -143,7 +153,7 @@ def main() -> None:
         if res[m]:
             b = res[m]["by_type"]
             w(f"| {label} | {num(b['url']['f1'])} | {num(b['text']['f1'])} | {num(b['html']['f1'])} |")
-    w("\nFigures (in `results/figures/`): `confusion_matrices.png`, `roc_curves.png`, `latency.png`, "
+    w("\nFigures (in `results/figures/`): `confusion_matrices.png`, `roc_curves.png`, `latency.png`, `ood_comparison.png`, "
       "`scheme_artefact.png`; table: `comparison_table.md`.\n")
 
     # ── Explainability and system ──
@@ -207,6 +217,49 @@ def main() -> None:
           "understates what users pasting full URLs would experience. The two scheme rules are therefore "
           "hidden from the user-facing indicators.\n")
 
+    # ── Out-of-distribution emails ──
+    ood_manifest = load("ood_manifest.json")
+    ood = {m: load(f"ood_{m}.json") for m, _ in MODELS}
+    if ood_manifest and any(ood.values()):
+        f, c = ood_manifest["files"], ood_manifest["counts"]
+        by = ood_manifest["final_by_source"]
+        w("## 5b. Out-of-distribution emails\n")
+        w("To see how the models transfer to data collected differently, every model was run, unchanged and with "
+          "the same 0.5 threshold, on emails from public sources that are not part of the training dataset: "
+          f"{f['nazario_2023']['description']} and {f['nazario_2024']['description']} "
+          f"({by.get('nazario_2023', 0) + by.get('nazario_2024', 0):,} phishing emails; "
+          f"{f['nazario_2023']['licence']}), and {f['sa_easy_ham']['description']} plus "
+          f"{f['sa_hard_ham']['description']} ({by.get('sa_easy_ham', 0) + by.get('sa_hard_ham', 0):,} "
+          f"legitimate emails). {c['after_dropping_empty'] - c['after_dropping_duplicates']} duplicates were "
+          f"dropped and {c['overlapping_with_original_dataset_removed']} emails overlapped the original dataset. "
+          "Because each class comes from a single source (and the legitimate emails are about 20 years older), "
+          "the two classes are reported separately. Ranges are 95% Wilson confidence intervals.\n")
+        w("| Model | Phishing caught: test set | Phishing caught: OOD [95% CI] | Legitimate flagged: test set "
+          "| Legitimate flagged: OOD [95% CI] | OOD hard-ham flagged |\n|---|---|---|---|---|---|")
+        for m, label in MODELS:
+            o, t = ood[m], res[m]
+            if not (o and t):
+                continue
+            cm = o["confusion_matrix"]
+            rlo, rhi = wilson(cm["tp"], cm["tp"] + cm["fn"])
+            flo, fhi = wilson(cm["fp"], cm["fp"] + cm["tn"])
+            hard = o["by_type"].get("sa_hard_ham", {}).get("fpr")
+            w(f"| {label} | {pct(t['recall'])} | {pct(o['recall'])} [{pct(rlo)}–{pct(rhi)}] | {pct(t['fpr'])} | "
+              f"{pct(o['fpr'])} [{pct(flo)}–{pct(fhi)}] | {pct(hard)} |")
+        drops = {label: res[m]["recall"] - ood[m]["recall"] for m, label in MODELS
+                 if ood[m] and res[m] and res[m]["recall"] > 0}
+        biggest = max(drops, key=drops.get) if drops else None
+        fell = [label for label, d in drops.items() if d > 0]
+        fell_text = ("Recall is lower out of distribution for every model that catches any phishing"
+                     if len(fell) == len(drops) else f"Recall is lower out of distribution for: {', '.join(fell)}")
+        ours = ood.get("bert_base")
+        if ours and biggest:
+            w(f"\nOn these emails Kasim's bert-base catches {pct(ours['recall'])} of phishing "
+              f"(test set: {pct(res['bert_base']['recall'])}) and flags {pct(ours['fpr'])} of legitimate mail. "
+              f"{fell_text}; the largest drop is for {biggest} ({100 * drops[biggest]:.1f} percentage points). "
+              "Where confidence intervals overlap, differences between models should not be read as a ranking. "
+              "Figure: `results/figures/ood_comparison.png`.\n")
+
     # ── Limitations ──
     w("## 6. Limitations\n")
     w("- **Leakage handling.** Our models never saw the test set before final evaluation. The published model "
@@ -216,7 +269,10 @@ def main() -> None:
       "have a near-identical text in the training data.")
     w("- **Dataset source bias.** The URL-scheme artefact above; legitimate emails are largely Enron corporate "
       "mail and the SMS subset counts spam as phishing (label definition), so performance on today's phishing "
-      "may differ. No out-of-distribution test set was evaluated (planned, not done).")
+      "may differ"
+      + (" (section 5b measures this on out-of-distribution emails; that set has its own bias: each class "
+         "comes from a single source and the legitimate emails are about 20 years older)."
+         if load("ood_manifest.json") else "; no out-of-distribution test set was evaluated."))
     w("- **English only.** The data and models are English; other languages were not tested.")
     if tokens:
         bert_weakest = {label: min(res[m]["by_type"], key=lambda k: res[m]["by_type"][k]["f1"])

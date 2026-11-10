@@ -20,6 +20,21 @@ This project includes and builds on third-party work:
            revision (the dataset is Apache-2.0 in later revisions).
   Model:   ealvaradob/bert-finetuned-phishing (Hugging Face), Apache-2.0
 
+Out-of-distribution evaluation data (downloaded by scripts/build_ood.py; the
+emails themselves are NOT included in this repository, only scores and
+aggregate metrics):
+
+  Phishing corpus by Jose Nazario, files phishing-2023 and phishing-2024
+  https://monkey.org/~jose/phishing/
+  Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0),
+  https://creativecommons.org/licenses/by/4.0/. Used unchanged as test data;
+  only the subject line and message body text were read.
+
+  SpamAssassin public corpus, 20030228_easy_ham and 20030228_hard_ham
+  https://spamassassin.apache.org/old/publiccorpus/
+  Copyright of the message text remains with the original senders; the
+  corpus is distributed for testing mail filters.
+
 The full licence text is in third_party/LICENSE-EstAlvB.md. You may not use
 those files except in compliance with the License. Unless required by
 applicable law or agreed to in writing, software distributed under the

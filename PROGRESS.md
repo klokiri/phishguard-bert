@@ -405,7 +405,7 @@ Run: `.venv/bin/python -m backend.app` (BERT; `PHISHGUARD_MODEL=heuristic` or `c
 - **Report draft** (`scripts/make_report.py` → `results/report_draft.md`): methods, results, explainability, error analysis, limitations and the "Use of third-party work" paragraph. Every number is read from `results/` at generation time (the script contains none; it prints "NOT YET MEASURED" if a file is missing). Sentences that make a claim (which models meet the target, which models are hurt by `https://`, the weakest sample type, whether the best checkpoint was the last one) are computed too. It is a draft for Kasim to rewrite in his own words.
 - **README**: setup, running the backend and web app, a command for every results file, the tag timeline, and attribution. It contains no metric values on purpose.
 - **Cleanup:** `PhishGuard_BERT/` removed in its own commit after checking that nothing referenced it. Every part had been replaced: `setup.bat` → `requirements.txt`; `prepare_dataset.py` → `src/data.py`; `day2_quick_test.py` → `scripts/eval_pretrained_bert.py`; `day3_finetune.py` → `scripts/train_bert.py`; `day6_evaluation.py` → `src/evaluate.py` + `scripts/make_figures.py`; `day7_demo_and_report.py` → `scripts/make_report.py`; its backend and connector were moved in Phase 1 and rewritten in Phases 5–6. The files remain in git history (e.g. `git show 48e2bed:PhishGuard_BERT/setup.bat`). After the removal, the tests, the parity check and every generator were re-run, and no committed result changed.
-- **Not done:** the out-of-distribution test set (first item in the cut order). Stated as a limitation in the report draft.
+- The out-of-distribution test set was first left out (first item in the cut order) and then added at Kasim's request — see the next section.
 
 ### Definition of done — status
 
@@ -419,8 +419,17 @@ Run: `.venv/bin/python -m backend.app` (BERT; `PHISHGUARD_MODEL=heuristic` or `c
 - [x] `frontend/PhishGuard_AI.html` uses BERT with a working fallback; indicators and tokens are real.
 - [x] All figures and `report_draft.md` generated from results files, no hard-coded numbers.
 - [x] `README.md`, `NOTICE`, `AI_ASSISTANCE_LOG.md`, `PROGRESS.md` up to date.
-- [ ] Out-of-distribution test set — not done (cut first, as planned).
+- [x] Out-of-distribution test set — added after Phase 7 at Kasim's request (see below).
 - [ ] Proposal requirements outside this build (FR-02, FR-04, NFR-01/02/04 load test/05/06/07/08/10, OpenAPI file) — listed in the report draft §6.
+
+---
+
+## Out-of-distribution evaluation (2026-11-11, at Kasim's request)
+
+- **Data** (`scripts/build_ood.py`, run with `python -I`; files in git-ignored `data/ood/`, one folder per source): phishing = Jose Nazario's phishing corpus 2023 + 2024 (CC BY 4.0, attribution in NOTICE); legitimate = SpamAssassin public corpus easy_ham + hard_ham (2003). Text = subject line + text/plain body (or HTML body with tags removed). After dropping duplicates: **776 phishing, 2,720 legitimate emails; 0 overlap** with the original dataset (normalised exact match against train/val/test). Email text is never committed; `results/ood_manifest.json` records URLs, file hashes, licences and counts.
+- **Evaluation** (`scripts/eval_ood.py <model>`, models unchanged, threshold 0.5, one process per model): results in `results/ood_<model>.json`, figure `results/figures/ood_comparison.png`, report draft section 5b with 95% Wilson intervals.
+- **Bias of this set (reported with the results):** each class comes from a single source, and the legitimate emails are about 20 years older than the phishing ones, so mixed metrics such as accuracy could be inflated by "era" cues. Results are therefore read per class: recall on the phishing emails, false-positive rate on the legitimate ones.
+- **Main finding** (numbers in `results/ood_bert_base.json` and report §5b): on modern phishing from another source, Kasim's bert-base catches clearly fewer phishing emails than on the original test set, while flagging very few legitimate emails. Recall drops for every learned model, most of all for the Random Forest on hand-crafted features. Differences between the two BERT models are within their confidence intervals.
 
 ---
 

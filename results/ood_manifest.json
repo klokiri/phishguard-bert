@@ -1,0 +1,63 @@
+{
+  "purpose": "Out-of-distribution email test set (sources not in ealvaradob/phishing-dataset)",
+  "files": {
+    "nazario_2023": {
+      "url": "https://monkey.org/~jose/phishing/phishing-2023",
+      "description": "Nazario phishing corpus 2023",
+      "licence": "CC BY 4.0",
+      "bytes": 7763704,
+      "sha256": "5007f1c1dc91b15e93e988afa3a1cf402e15c88f765d3057be8bfec50dae1fe8",
+      "label": 1,
+      "messages": 419
+    },
+    "nazario_2024": {
+      "url": "https://monkey.org/~jose/phishing/phishing-2024",
+      "description": "Nazario phishing corpus 2024",
+      "licence": "CC BY 4.0",
+      "bytes": 15457816,
+      "sha256": "60afa40a2757170093a2bde31ec9cda4e54d33992203ce04bfbbc86d2e5e5b99",
+      "label": 1,
+      "messages": 403
+    },
+    "sa_easy_ham": {
+      "url": "https://spamassassin.apache.org/old/publiccorpus/20030228_easy_ham.tar.bz2",
+      "description": "SpamAssassin public corpus, easy_ham (2003-02-28)",
+      "licence": "copyright with original senders",
+      "bytes": 1612216,
+      "sha256": "2b7b65904bcfcc31d2b5f51946f2d261370b257402cbbd62930b46ab83367438",
+      "label": 0,
+      "messages": 2500
+    },
+    "sa_hard_ham": {
+      "url": "https://spamassassin.apache.org/old/publiccorpus/20030228_hard_ham.tar.bz2",
+      "description": "SpamAssassin public corpus, hard_ham (2003-02-28)",
+      "licence": "copyright with original senders",
+      "bytes": 1029898,
+      "sha256": "ce2ce67880643dbde65ea7f85bffbfe4417349c4bd80b6b0de56262ae6b0a9c9",
+      "label": 0,
+      "messages": 250
+    }
+  },
+  "counts": {
+    "parsed": 3572,
+    "after_dropping_empty": 3572,
+    "after_dropping_duplicates": 3496,
+    "overlapping_with_original_dataset_removed": 0,
+    "final": 3496
+  },
+  "final_by_source": {
+    "nazario_2023": 396,
+    "nazario_2024": 380,
+    "sa_easy_ham": 2472,
+    "sa_hard_ham": 248
+  },
+  "final_by_label": {
+    "phishing": 776,
+    "legitimate": 2720
+  },
+  "text_construction": "'Subject: ...' line + text/plain body (or HTML body with tags removed); max 100,000 chars",
+  "overlap_check": "lower-cased, whitespace-collapsed exact match against train/val/test texts",
+  "content_sha256": "ad88eeb39b169bfe2273fd2ea1d37cddb17de0d9021644ca0a296a2ca691931b",
+  "note": "Email text is not committed (copyright of senders; recent phishing mails are not anonymised).",
+  "command": ".venv/bin/python -I scripts/build_ood.py"
+}

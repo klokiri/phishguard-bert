@@ -8,6 +8,7 @@ Writes results/figures/:
   roc_curves.png                                overlaid ROC curves (full + zoom)
   latency.png                                   mean ms per sample (batched)
   scheme_artefact.png                           false positives with/without https://
+  ood_comparison.png                            recall and FPR: test set vs out-of-distribution emails
 
 Replaces the earlier scaffold's day6_evaluation.py (removed in Phase 7), which crashed
 (f1_score(weighted=True)) and evaluated only one model.
@@ -193,6 +194,47 @@ def scheme_artefact():
     plt.close(fig)
 
 
+def ood_comparison(results):
+    """Recall and FPR: main test set vs out-of-distribution emails (two panels, one scale each)."""
+    models = [(m, name) for m, name, *_ in MODELS if (RESULTS / f"ood_{m}.json").exists()]
+    if not models:
+        return
+    ood = {m: json.loads((RESULTS / f"ood_{m}.json").read_text()) for m, _ in models}
+    n_phish = ood[models[0][0]]["confusion_matrix"]["tp"] + ood[models[0][0]]["confusion_matrix"]["fn"]
+    n_legit = ood[models[0][0]]["confusion_matrix"]["tn"] + ood[models[0][0]]["confusion_matrix"]["fp"]
+
+    fig, axes = plt.subplots(1, 2, figsize=(13, 5), facecolor=SURFACE)
+    panels = [("recall", f"Phishing caught (recall): test set vs {n_phish} OOD phishing emails"),
+              ("fpr", f"Legitimate flagged (FPR): test set vs {n_legit:,} OOD legitimate emails")]
+    x = np.arange(len(models))
+    w = 0.36
+    for ax, (metric, title) in zip(axes, panels):
+        style(ax)
+        ax.grid(axis="x", visible=False)
+        test_vals = [100 * results[m][metric] for m, _ in models]
+        ood_vals = [100 * ood[m][metric] for m, _ in models]
+        b1 = ax.bar(x - w / 2 - 0.01, test_vals, w, color="#2a78d6", label="original test set")
+        b2 = ax.bar(x + w / 2 + 0.01, ood_vals, w, color="#eb6834", label="out-of-distribution emails")
+        # Axis headroom and label offset scale with this panel's own range, so
+        # labels sit just above their bars on both the 0-100 and the 0-9 panel.
+        top = (108 if metric == "recall" else max(test_vals + ood_vals) * 1.18)
+        ax.set_ylim(0, top)
+        for bars in (b1, b2):
+            for bar in bars:
+                ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + top * 0.012,
+                        f"{bar.get_height():.1f}", ha="center", va="bottom", color=INK, fontsize=7.5)
+        ax.set_xticks(x, [name.replace(" (", "\n(").replace(" + ", " +\n") for _, name in models],
+                      fontsize=7.5, color=INK2)
+        ax.set_ylabel("%", color=INK2, fontsize=9)
+        ax.set_title(title, color=INK, fontsize=10, loc="left")
+    axes[0].legend(frameon=False, fontsize=8.5, labelcolor=INK, loc="upper right")
+    fig.text(0.01, 0.005, "OOD: Nazario phishing corpus 2023-2024 vs SpamAssassin ham 2002-2003 "
+             "(see results/ood_manifest.json). Models unchanged, threshold 0.5.", color=INK2, fontsize=8)
+    fig.tight_layout(rect=(0, 0.03, 1, 1))
+    fig.savefig(OUT / "ood_comparison.png", dpi=160, facecolor=SURFACE)
+    plt.close(fig)
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     results, preds = load()
@@ -201,6 +243,7 @@ def main() -> None:
     roc_curves(results, preds)
     latency(results)
     scheme_artefact()
+    ood_comparison(results)
     print(df[["model", "accuracy", "f1", "fpr", "roc_auc", "latency_ms_per_sample"]].to_string(index=False))
     print("figures:", sorted(p.name for p in OUT.iterdir()))
 

@@ -98,3 +98,14 @@ The original HTML (Kasim's app) is in the baseline commit `48e2bed`; the decisio
 | `scripts/make_report.py`, `results/report_draft.md` | Report draft generated only from `results/`; a starting point to be rewritten by Kasim | phase-closing commit |
 | `README.md`, `PROGRESS.md`, `AI_ASSISTANCE_LOG.md` | Final documentation | phase-closing commit |
 | removal of `PhishGuard_BERT/` | Superseded scaffold removed (still in git history) | cleanup commit |
+
+## Out-of-distribution evaluation (2026-11-11, requested by Kasim)
+
+| File | What it is | Commit |
+|---|---|---|
+| `scripts/build_ood.py`, `results/ood_manifest.json` | Downloads and parses the OOD email corpora, removes duplicates and any overlap with the original data (text not committed) | see `git log -- scripts/build_ood.py` |
+| `scripts/eval_ood.py`, `results/ood_*.json`, `results/predictions/ood_*.csv.gz` | Evaluation of all six models on the OOD set (generated) | same |
+| `scripts/make_figures.py`, `scripts/make_report.py` (changes), `results/figures/ood_comparison.png`, `results/report_draft.md` | OOD figure and report section with Wilson confidence intervals (generated) | same |
+| `NOTICE`, `README.md`, `PROGRESS.md`, `AI_ASSISTANCE_LOG.md` | CC BY 4.0 attribution, commands, write-up | same |
+
+The choice of sources (Nazario phishing corpus, SpamAssassin ham) was made by the AI assistant; Kasim asked for the OOD set to be built.

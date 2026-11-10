@@ -85,7 +85,9 @@ Every number comes from a file in `results/`, produced by one command:
 | `results/scheme_artefact.json` (one model per run) | `.venv/bin/python scripts/scheme_artefact.py <model>` for each of `heuristic tfidf_logreg tfidf_xgboost features_rf bert_base bert_pretrained` |
 | `results/error_analysis.json` | `.venv/bin/python scripts/error_analysis.py` |
 | `results/error_analysis_notes.json` | Hand-written (by the AI assistant, for Kasim's review): one note per sampled error |
-| `results/figures/*` (table + 4 figures) | `.venv/bin/python scripts/make_figures.py` |
+| `results/ood_manifest.json` (downloads ~26 MB of public email corpora; email text stays in git-ignored `data/ood/`) | `.venv/bin/python -I scripts/build_ood.py` |
+| `results/ood_<model>.json` (one model per run) | `.venv/bin/python scripts/eval_ood.py <model>` for each of `heuristic tfidf_logreg tfidf_xgboost features_rf bert_base bert_pretrained` |
+| `results/figures/*` (table + 5 figures) | `.venv/bin/python scripts/make_figures.py` |
 | `results/report_draft.md` | `.venv/bin/python scripts/make_report.py` |
 | `frontend/model_results.js` | `.venv/bin/python scripts/export_frontend_results.py` |
 
@@ -123,7 +125,8 @@ Each phase ends with an annotated tag. Check one out with `git checkout <tag>`.
 | `phase-4-bert` | 2026-11-09 | `6991504` | Published BERT evaluated on its held-out set; bert-base fine-tuned |
 | `phase-5-backend` | 2026-11-09 | `2b19147` | Config, ModelService, data-derived indicators, occlusion attribution, tests, coverage |
 | `phase-6-frontend` | 2026-11-10 | `f4e46aa` | Web app connected to the BERT backend with fallback; invented metrics removed |
-| `phase-7-report` | 2026-11-10 | (final commit) | Figures, scheme-artefact test, error analysis, report draft, scaffold removed |
+| `phase-7-report` | 2026-11-10 | `d16ba66` | Figures, scheme-artefact test, error analysis, report draft, scaffold removed |
+| `ood-eval` | 2026-11-11 | (latest) | Out-of-distribution email test set (Nazario phishing 2023–24, SpamAssassin ham) for all six models |
 
 ## Third-party work
 
@@ -133,6 +136,8 @@ This project builds on **Phishing Detection with BERT** by **Esteban Alvarado**,
 - Dataset: https://huggingface.co/datasets/ealvaradob/phishing-dataset — `train.json`/`test.json` at revision `23b8c17f4c9438c3e5d7729be349db049614a266` (MIT at that revision; Apache-2.0 later)
 - Model: https://huggingface.co/ealvaradob/bert-finetuned-phishing (revision `fa8fb73a007174c410ab7160d4e4c6e6b8d998d4`). It's evaluated here as a third-party baseline, and it is not this project's model.
 - `src/features.py` is his `features.py`, copied unchanged with an attribution header.
+
+Out-of-distribution test emails: Jose Nazario's phishing corpus (CC BY 4.0) and the SpamAssassin public corpus. These are downloaded by `scripts/build_ood.py` and not redistributed here; see [NOTICE](NOTICE).
 
 Full licence text: [third_party/LICENSE-EstAlvB.md](third_party/LICENSE-EstAlvB.md); notice: [NOTICE](NOTICE). The "Use of third-party work" paragraph for the report is section 7 of `results/report_draft.md`.
 

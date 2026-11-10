@@ -57,7 +57,7 @@ F1 by sample type:
 | TF-IDF + XGBoost | 0.7177 | 0.8780 | 0.9005 |
 | Regex heuristic (original web app) | 0.0010 | 0.0000 | 0.0000 |
 
-Figures (in `results/figures/`): `confusion_matrices.png`, `roc_curves.png`, `latency.png`, `scheme_artefact.png`; table: `comparison_table.md`.
+Figures (in `results/figures/`): `confusion_matrices.png`, `roc_curves.png`, `latency.png`, `ood_comparison.png`, `scheme_artefact.png`; table: `comparison_table.md`.
 
 ## 4. Explainability and the web system
 
@@ -114,10 +114,25 @@ False positives: 238 (HTML 123, email/SMS 20, URL 95); 123 of them are also misc
 
 (n = 3,923 legitimate URLs per model.) Models that flag more legitimate URLs once `https://` is added: bert-base, fine-tuned (Kasim), bert-large, published model (E. Alvarado) †, TF-IDF + Logistic Regression, Random Forest on hand-crafted features, TF-IDF + XGBoost. For these, the test-set false positive rate understates what users pasting full URLs would experience. The two scheme rules are therefore hidden from the user-facing indicators.
 
+## 5b. Out-of-distribution emails
+
+To see how the models transfer to data collected differently, every model was run, unchanged and with the same 0.5 threshold, on emails from public sources that are not part of the training dataset: Nazario phishing corpus 2023 and Nazario phishing corpus 2024 (776 phishing emails; CC BY 4.0), and SpamAssassin public corpus, easy_ham (2003-02-28) plus SpamAssassin public corpus, hard_ham (2003-02-28) (2,720 legitimate emails). 76 duplicates were dropped and 0 emails overlapped the original dataset. Because each class comes from a single source (and the legitimate emails are about 20 years older), the two classes are reported separately. Ranges are 95% Wilson confidence intervals.
+
+| Model | Phishing caught: test set | Phishing caught: OOD [95% CI] | Legitimate flagged: test set | Legitimate flagged: OOD [95% CI] | OOD hard-ham flagged |
+|---|---|---|---|---|---|
+| bert-base, fine-tuned (Kasim) | 95.5% | 81.3% [78.4%–83.9%] | 2.7% | 0.7% [0.4%–1.0%] | 5.7% |
+| bert-large, published model (E. Alvarado) † | 96.7% | 78.0% [74.9%–80.7%] | 2.5% | 0.3% [0.2%–0.6%] | 2.4% |
+| TF-IDF + Logistic Regression | 80.9% | 72.9% [69.7%–75.9%] | 6.1% | 2.5% [2.0%–3.2%] | 17.7% |
+| Random Forest on hand-crafted features | 81.8% | 40.5% [37.1%–44.0%] | 8.6% | 6.2% [5.4%–7.2%] | 16.1% |
+| TF-IDF + XGBoost | 70.1% | 48.8% [45.3%–52.4%] | 4.9% | 3.7% [3.0%–4.5%] | 18.9% |
+| Regex heuristic (original web app) | 0.0% | 0.0% [0.0%–0.5%] | 0.0% | 0.0% [0.0%–0.1%] | 0.0% |
+
+On these emails Kasim's bert-base catches 81.3% of phishing (test set: 95.5%) and flags 0.7% of legitimate mail. Recall is lower out of distribution for every model that catches any phishing; the largest drop is for Random Forest on hand-crafted features (41.4 percentage points). Where confidence intervals overlap, differences between models should not be read as a ranking. Figure: `results/figures/ood_comparison.png`.
+
 ## 6. Limitations
 
 - **Leakage handling.** Our models never saw the test set before final evaluation. The published model was evaluated on its own held-out test set, but its author used that set for checkpoint selection, so its scores are slightly optimistic. 68 test rows (0.44%) have a near-identical text in the training data.
-- **Dataset source bias.** The URL-scheme artefact above; legitimate emails are largely Enron corporate mail and the SMS subset counts spam as phishing (label definition), so performance on today's phishing may differ. No out-of-distribution test set was evaluated (planned, not done).
+- **Dataset source bias.** The URL-scheme artefact above; legitimate emails are largely Enron corporate mail and the SMS subset counts spam as phishing (label definition), so performance on today's phishing may differ (section 5b measures this on out-of-distribution emails; that set has its own bias: each class comes from a single source and the legitimate emails are about 20 years older).
 - **English only.** The data and models are English; other languages were not tested.
 - **Truncation.** BERT reads at most 512 tokens; only 8.6% of training HTML pages fit. Weakest sample type by F1: bert-base, fine-tuned (Kasim): html; bert-large, published model (E. Alvarado) †: html.
 - **Single training run.** One seed; GPU training on Apple MPS is not bit-for-bit deterministic, so re-runs give close but not identical numbers. The best checkpoint was the last one evaluated, so longer training might help; this was not tested, to avoid tuning on the test set.
