@@ -1,0 +1,208 @@
+{
+  "model": "bert_base",
+  "test_rows": 15466,
+  "false_positives": {
+    "count": 238,
+    "by_type": {
+      "html": 123,
+      "text": 20,
+      "url": 95
+    },
+    "also_wrong_in_author_model": 123
+  },
+  "false_negatives": {
+    "count": 295,
+    "by_type": {
+      "html": 118,
+      "text": 33,
+      "url": 144
+    },
+    "also_wrong_in_author_model": 146
+  },
+  "sampling": "10 of each drawn with pandas .sample(random_state=42)",
+  "false_positive_examples": [
+    {
+      "row_id": 245,
+      "type": "text",
+      "true_label": "legitimate",
+      "phishing_score": 0.901,
+      "author_model_also_wrong": false,
+      "chars": 8006,
+      "excerpt": "-----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1Say 'amen' somebody. What the WSJ said, appended below. The WTC, as constructed, was a confiscatory government boondoggle, expropriated from the original pre-construction property owners at the behest of a third-generation trust-fund-aristocrat for the \"g"
+    },
+    {
+      "row_id": 502,
+      "type": "html",
+      "true_label": "legitimate",
+      "phishing_score": 0.9706,
+      "author_model_also_wrong": false,
+      "chars": 27569,
+      "excerpt": "<!DOCTYPE html> <html> <head> <script> (function loader(){if(window.Tracert){return}var Tracert={_isInit:true,_readyToRun:[],call:function(){var args=arguments;var argsList;try{argsList=[].slice.call(args,0)}catch(ex){var argsLen=args.length;argsList=[];for(var i=0;i<argsLen;i++){argsList.push(args["
+    },
+    {
+      "row_id": 926,
+      "type": "text",
+      "true_label": "legitimate",
+      "phishing_score": 0.9998,
+      "author_model_also_wrong": true,
+      "chars": 50,
+      "excerpt": "moneycentral : 6 routes to retire rich ecial = msn"
+    },
+    {
+      "row_id": 7056,
+      "type": "html",
+      "true_label": "legitimate",
+      "phishing_score": 0.986,
+      "author_model_also_wrong": true,
+      "chars": 1076,
+      "excerpt": "<html> <head> <script type=\"text/javascript\"> (function() { var href = window.location.toString(); var queryArgs = window.location.search; // the ?foo=1 part // var hashArgs = window.location.hash; // the #foo=1 part // this avoids the FF bug where location.hash is prematurely decoded var hashArgs ="
+    },
+    {
+      "row_id": 7151,
+      "type": "url",
+      "true_label": "legitimate",
+      "phishing_score": 0.999,
+      "author_model_also_wrong": false,
+      "chars": 28,
+      "excerpt": "myprofile.cos.com/greenfie44"
+    },
+    {
+      "row_id": 7857,
+      "type": "html",
+      "true_label": "legitimate",
+      "phishing_score": 0.9352,
+      "author_model_also_wrong": true,
+      "chars": 7419,
+      "excerpt": "<!DOCTYPE html> <html> <head> <meta content=\"text/html; charset=utf-8\" http-equiv=\"Content-type\"/> <meta content=\"no-cache\" http-equiv=\"Cache-control\"/> <meta content=\"no-cache\" http-equiv=\"Pragma\"/> <meta content=\"0\" http-equiv=\"Expires\"/> <meta content=\"width=device-width, initial-scale=1.0, maxim"
+    },
+    {
+      "row_id": 10926,
+      "type": "html",
+      "true_label": "legitimate",
+      "phishing_score": 0.996,
+      "author_model_also_wrong": false,
+      "chars": 44976,
+      "excerpt": "<!DOCTYPE html> <html> <head> <meta content=\"text/html; charset=utf-8\" http-equiv=\"Content-Type\"/> <meta content=\"IE=edge\" http-equiv=\"X-UA-Compatible\"/> <title> Create Account </title> <script src=\"https://d2baw28zdve8g3.cloudfront.net/ssl/common/lib/jquery-1.8.2.min.js?v=1612666946\" type=\"text/jav"
+    },
+    {
+      "row_id": 13990,
+      "type": "url",
+      "true_label": "legitimate",
+      "phishing_score": 0.973,
+      "author_model_also_wrong": false,
+      "chars": 21,
+      "excerpt": "https://www.ameba.jp/"
+    },
+    {
+      "row_id": 14574,
+      "type": "html",
+      "true_label": "legitimate",
+      "phishing_score": 0.982,
+      "author_model_also_wrong": false,
+      "chars": 7562,
+      "excerpt": "<html> <head> <meta content=\"en-us\" http-equiv=\"Content-Language\"/> <meta content=\"Microsoft FrontPage 6.0\" name=\"GENERATOR\"/> <meta content=\"FrontPage.Editor.Document\" name=\"ProgId\"/> <title> Untitled </title> <base target=\"bottom\"/> <style> <!-- h2 {margin-top:0in; margin-right:-1.25in; margin-bot"
+    },
+    {
+      "row_id": 14660,
+      "type": "html",
+      "true_label": "legitimate",
+      "phishing_score": 0.9937,
+      "author_model_also_wrong": true,
+      "chars": 47059,
+      "excerpt": "<!DOCTYPE html> <!--[if lt IE 7]> <html class=\"no-js lt-ie9 lt-ie8 lt-ie7\" lang=\"en\"> <![endif]--> <!--[if IE 7]> <html class=\"no-js lt-ie9 lt-ie8\" lang=\"en\"> <![endif]--> <!--[if IE 8]> <html class=\"no-js lt-ie9\" lang=\"en\"> <![endif]--> <!--[if gt IE 8]><!--> <html class=\"no-js\" lang=\"en\"> <!--<![e"
+    }
+  ],
+  "false_negative_examples": [
+    {
+      "row_id": 826,
+      "type": "text",
+      "true_label": "phishing",
+      "phishing_score": 0.0064,
+      "author_model_also_wrong": true,
+      "chars": 59,
+      "excerpt": "armenian genocide plagues ankara 90 years on full article :"
+    },
+    {
+      "row_id": 2412,
+      "type": "url",
+      "true_label": "phishing",
+      "phishing_score": 0.0106,
+      "author_model_also_wrong": true,
+      "chars": 38,
+      "excerpt": "engels.newlifevillas.com/sweupdate.php"
+    },
+    {
+      "row_id": 4513,
+      "type": "url",
+      "true_label": "phishing",
+      "phishing_score": 0.0012,
+      "author_model_also_wrong": false,
+      "chars": 72,
+      "excerpt": "www.celebrate100saultstemarie.com/msn/msn.php?newx-UserName-COMPUTERNAME"
+    },
+    {
+      "row_id": 4595,
+      "type": "html",
+      "true_label": "phishing",
+      "phishing_score": 0.0023,
+      "author_model_also_wrong": true,
+      "chars": 34949,
+      "excerpt": "<!DOCTYPE html> <html class=\"no-js\" lang=\"en-US\"> <head> <meta charset=\"utf-8\"/> <meta content=\"width=device-width, initial-scale=1\" name=\"viewport\"/> <link href=\"http://gmpg.org/xfn/11\" rel=\"profile\"/> <script> (function(html){html.className = html.className.replace(/\\bno-js\\b/,'js')})(document.doc"
+    },
+    {
+      "row_id": 5138,
+      "type": "html",
+      "true_label": "phishing",
+      "phishing_score": 0.0002,
+      "author_model_also_wrong": true,
+      "chars": 10742,
+      "excerpt": "<!DOCTYPE html> <html> <head> <meta charset=\"utf-8\"/> <meta content=\"IE=edge\" http-equiv=\"X-UA-Compatible\"/> <title> AdminLTE 2 | Log in </title> <!-- Tell the browser to be responsive to screen width --> <meta content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no\" name=\"vi"
+    },
+    {
+      "row_id": 8218,
+      "type": "html",
+      "true_label": "phishing",
+      "phishing_score": 0.0094,
+      "author_model_also_wrong": true,
+      "chars": 6484,
+      "excerpt": "<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"utf-8\"/> <meta content=\"width=device-width, initial-scale=1.0, user-scalable=no\" name=\"viewport\"/> <meta content=\"ie=edge\" http-equiv=\"X-UA-Compatible\"/> <meta content=\"#f5f6f8\" name=\"theme-color\"/> <style id=\"rootColor\"> :root {--biolinky-custo"
+    },
+    {
+      "row_id": 13784,
+      "type": "url",
+      "true_label": "phishing",
+      "phishing_score": 0.0603,
+      "author_model_also_wrong": false,
+      "chars": 47,
+      "excerpt": "plipk.com/kola/Re-Validate%20Your%20Mailbox.htm"
+    },
+    {
+      "row_id": 14711,
+      "type": "html",
+      "true_label": "phishing",
+      "phishing_score": 0.0222,
+      "author_model_also_wrong": false,
+      "chars": 294,
+      "excerpt": "<html xmlns=\"http://www.w3.org/1999/xhtml\"> <head> <meta content=\"0; url=track.html?resource_url=https://www.ups.com/track=86169&amp;session=101310\" http-equiv=\"refresh\"/> <meta content=\"noindex\" name=\"robots\"/> <meta content=\"noarchive\" name=\"robots\"/> </head> <body> </body> </html>"
+    },
+    {
+      "row_id": 14883,
+      "type": "url",
+      "true_label": "phishing",
+      "phishing_score": 0.0008,
+      "author_model_also_wrong": false,
+      "chars": 34,
+      "excerpt": "ed29.com/service/auctionlist/remax"
+    },
+    {
+      "row_id": 14972,
+      "type": "url",
+      "true_label": "phishing",
+      "phishing_score": 0.0289,
+      "author_model_also_wrong": false,
+      "chars": 26,
+      "excerpt": "https://www.vxswqefit.com/"
+    }
+  ],
+  "command": ".venv/bin/python scripts/error_analysis.py"
+}

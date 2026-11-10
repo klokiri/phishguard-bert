@@ -1,0 +1,123 @@
+{
+  "_about": "Test URLs without a scheme, scored as-is and with 'https://' prepended. For benign URLs, 'flagged' = false positive rate; for phishing URLs, = recall. Decision threshold 0.5. Command: .venv/bin/python scripts/scheme_artefact.py <model>",
+  "bert_base": {
+    "benign": {
+      "flagged_as_phishing_plain": 0.014,
+      "flagged_as_phishing_with_https": 0.0826,
+      "flipped_to_benign": 2,
+      "flipped_to_phishing": 271,
+      "mean_score_plain": 0.0141,
+      "mean_score_with_https": 0.0827,
+      "urls": 3923
+    },
+    "phishing": {
+      "flagged_as_phishing_plain": 0.9515,
+      "flagged_as_phishing_with_https": 0.9496,
+      "flipped_to_benign": 54,
+      "flipped_to_phishing": 50,
+      "mean_score_plain": 0.9515,
+      "mean_score_with_https": 0.9462,
+      "urls": 2123
+    }
+  },
+  "bert_pretrained": {
+    "benign": {
+      "flagged_as_phishing_plain": 0.012,
+      "flagged_as_phishing_with_https": 0.0765,
+      "flipped_to_benign": 3,
+      "flipped_to_phishing": 256,
+      "mean_score_plain": 0.012,
+      "mean_score_with_https": 0.0769,
+      "urls": 3923
+    },
+    "phishing": {
+      "flagged_as_phishing_plain": 0.9614,
+      "flagged_as_phishing_with_https": 0.9416,
+      "flipped_to_benign": 85,
+      "flipped_to_phishing": 43,
+      "mean_score_plain": 0.961,
+      "mean_score_with_https": 0.9412,
+      "urls": 2123
+    }
+  },
+  "features_rf": {
+    "benign": {
+      "flagged_as_phishing_plain": 0.0561,
+      "flagged_as_phishing_with_https": 0.4693,
+      "flipped_to_benign": 50,
+      "flipped_to_phishing": 1671,
+      "mean_score_plain": 0.1208,
+      "mean_score_with_https": 0.478,
+      "urls": 3923
+    },
+    "phishing": {
+      "flagged_as_phishing_plain": 0.7744,
+      "flagged_as_phishing_with_https": 0.927,
+      "flipped_to_benign": 31,
+      "flipped_to_phishing": 355,
+      "mean_score_plain": 0.7604,
+      "mean_score_with_https": 0.8533,
+      "urls": 2123
+    }
+  },
+  "heuristic": {
+    "benign": {
+      "flagged_as_phishing_plain": 0.0,
+      "flagged_as_phishing_with_https": 0.0,
+      "flipped_to_benign": 0,
+      "flipped_to_phishing": 0,
+      "mean_score_plain": 0.015,
+      "mean_score_with_https": 0.003,
+      "urls": 3923
+    },
+    "phishing": {
+      "flagged_as_phishing_plain": 0.0005,
+      "flagged_as_phishing_with_https": 0.0,
+      "flipped_to_benign": 1,
+      "flipped_to_phishing": 0,
+      "mean_score_plain": 0.0651,
+      "mean_score_with_https": 0.0328,
+      "urls": 2123
+    }
+  },
+  "tfidf_logreg": {
+    "benign": {
+      "flagged_as_phishing_plain": 0.0637,
+      "flagged_as_phishing_with_https": 0.0783,
+      "flipped_to_benign": 0,
+      "flipped_to_phishing": 57,
+      "mean_score_plain": 0.2054,
+      "mean_score_with_https": 0.2138,
+      "urls": 3923
+    },
+    "phishing": {
+      "flagged_as_phishing_plain": 0.6759,
+      "flagged_as_phishing_with_https": 0.6849,
+      "flipped_to_benign": 1,
+      "flipped_to_phishing": 20,
+      "mean_score_plain": 0.7106,
+      "mean_score_with_https": 0.7111,
+      "urls": 2123
+    }
+  },
+  "tfidf_xgboost": {
+    "benign": {
+      "flagged_as_phishing_plain": 0.0393,
+      "flagged_as_phishing_with_https": 0.0686,
+      "flipped_to_benign": 3,
+      "flipped_to_phishing": 118,
+      "mean_score_plain": 0.2933,
+      "mean_score_with_https": 0.2989,
+      "urls": 3923
+    },
+    "phishing": {
+      "flagged_as_phishing_plain": 0.4786,
+      "flagged_as_phishing_with_https": 0.4918,
+      "flipped_to_benign": 7,
+      "flipped_to_phishing": 35,
+      "mean_score_plain": 0.6005,
+      "mean_score_with_https": 0.6012,
+      "urls": 2123
+    }
+  }
+}

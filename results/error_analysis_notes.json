@@ -1,0 +1,27 @@
+{
+  "_about": "Short notes on the 20 randomly sampled errors in results/error_analysis.json (model bert_base). Written by the AI assistant after reading each example (excerpt, page title, form and password-field counts); they are interpretations, not measurements, and should be reviewed by Kasim before submission.",
+  "false_positives": {
+    "245": "Long (8,006-character) PGP-signed political mailing-list post. BERT only reads the first 512 tokens; forceful opinion and financial language may resemble spam. Plausibly benign; the author's model got it right.",
+    "502": "Real Alipay 'Account Service Agreement' page. Payment-brand plus account vocabulary is exactly what phishing kits imitate, and the first 512 tokens are mostly script code, so the model has little else to go on.",
+    "926": "One-line newsletter headline ('6 routes to retire rich'). Spam-like wording on a sample labelled legitimate; the spam/phishing boundary in this dataset is fuzzy (SMS spam is labelled phishing). Both models wrong.",
+    "7056": "Untitled page that is only a JavaScript redirect snippet. Redirect scripts are common in phishing kits; with no other content this is genuinely ambiguous. Both models wrong.",
+    "7151": "Personal profile URL with a handle containing digits ('greenfie44') on a little-known domain; resembles user-generated hosting paths often used for phishing.",
+    "7857": "Hosting provider's 'Account Suspended' placeholder page. The title is the same wording phishing lures use, so it is hard to separate by content alone. Both models wrong.",
+    "10926": "Genuine 'Create Account' page with two password fields. A credential form is the main feature of a phishing page; without the domain, content alone cannot tell a real sign-up page from a copy.",
+    "13990": "https://www.ameba.jp/ (a real Japanese blogging site). Consistent with the scheme artefact: benign training URLs rarely include 'https://'.",
+    "14574": "Old FrontPage-generated 'Untitled' frame page. Crude, amateur page structure is also typical of many phishing pages in the dataset; likely a style-based confusion.",
+    "14660": "Real Klarna 'Online bank transfer' page with 6 forms and 2 password fields: a genuine bank-login flow that is almost indistinguishable from a phishing replica by content. Needs URL/domain context. Both models wrong."
+  },
+  "false_negatives": {
+    "826": "News-headline-style line labelled phishing with nothing phishing-like in it; most likely a spam newsletter counted as phishing (label noise). Both models wrong.",
+    "2412": "update.php script under a subdomain of an unrelated holiday-villa domain: a typical compromised-site phishing path, but with no 'login'/brand words for the model to latch onto. Both models wrong.",
+    "4513": "MSN-named folder and script on an unrelated community domain, with UserName/COMPUTERNAME in the query: brand-in-path phishing. Missed by our model; the author's bert-large caught it.",
+    "4595": "Looks like a legitimate news article page (taxes on the High Street) with one form; either a cloned page used as a lure or a labelling error. Nothing suspicious in the first 512 tokens. Both models wrong.",
+    "5138": "'AdminLTE 2 | Log in' admin-template login page with a password field. Phishing kits reuse free templates like this, and the same template appears on benign sites. Both models wrong.",
+    "8218": "'Pubg Mobile Event!' gaming-giveaway lure page; gaming-scam vocabulary is probably rare in the training data. Both models wrong.",
+    "13784": "Classic 'Re-Validate Your Mailbox' lure, but the words are URL-encoded ('%20'), which splits them into odd tokens; score 0.06. The author's model caught it.",
+    "14711": "Meta-refresh redirect to a fake UPS tracking page; the page itself is only a redirect, so the model sees almost no content. The author's model caught it.",
+    "14883": "Innocuous-looking path on a short domain; no visible phishing markers in the URL text alone. Probably not detectable from the URL string without domain reputation data.",
+    "14972": "https://www.vxswqefit.com/: a random-letter (likely algorithmically generated) domain. Missed despite having 'https://', so the scheme artefact does not make every full URL look phishing. The author's model caught it."
+  }
+}

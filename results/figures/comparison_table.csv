@@ -1,0 +1,7 @@
+model,results_file,test_rows,accuracy,precision,recall,f1,fpr,roc_auc,latency_ms_per_sample
+"bert-base (Kasim, fine-tuned)",results/bert_base.json,15466,0.9655,0.9631,0.9547,0.9589,0.0266,0.9935,6.2714
+bert-large (author) †,results/bert_pretrained.json,15466,0.9716,0.9656,0.967,0.9663,0.025,0.9944,17.7278
+TF-IDF + LogReg,results/tfidf_logreg.json,15466,0.8842,0.906,0.8088,0.8546,0.061,0.9627,0.3633
+Random Forest (features),results/features_rf.json,15466,0.8735,0.873,0.8184,0.8448,0.0865,0.9328,4.0027
+TF-IDF + XGBoost,results/tfidf_xgboost.json,15466,0.846,0.9131,0.7008,0.793,0.0485,0.9393,0.4154
+Heuristic (original app),results/heuristic.json,15466,0.5792,1.0,0.0003,0.0006,0.0,0.5897,0.3206
