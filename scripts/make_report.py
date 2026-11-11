@@ -178,6 +178,7 @@ def main() -> None:
           f"{coverage['total_percent']}% (lowest module {coverage['lowest_module_percent']}%), against the "
           f"NFR-09 target of {coverage['target_percent']:.0f}%.\n")
     ext_on, ext_off = load("extension_test_online.json"), load("extension_test_offline.json")
+    live = load("extension_live_check.json")
     w("A Chrome extension for Gmail (`extension/`, added after the proposal at Kasim's request) checks each email "
       "when it is opened: it reads the sender, subject, body text and link targets, sends them only to the local "
       "backend, and shows the verdict, phishing probability, fired indicators and occlusion words in a banner "
@@ -186,8 +187,11 @@ def main() -> None:
       + (f"{ext_on['passed']} of {ext_on['total']} checks passed with the backend running and "
          f"{ext_off['passed']} of {ext_off['total']} with it stopped ({ext_on['chrome']})"
          if ext_on and ext_off else NYM)
-      + ". A check on live Gmail has not been recorded. Gmail's page structure is not a public API, so the "
-        "extension can stop finding emails when Gmail changes it.\n")
+      + ". "
+      + (f"On live Gmail it was checked by hand by {live['checked_by']} on {live['date']} (commit "
+         f"`{live['extension_commit']}`): {live['result']}." if live else "A check on live Gmail has not been recorded.")
+      + " Gmail's page structure is not a public API, so the extension can stop finding emails when Gmail "
+        "changes it.\n")
 
     # ── Error analysis ──
     w("## 5. Error analysis (bert-base)\n")

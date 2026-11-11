@@ -1,0 +1,8 @@
+{
+  "what": "Manual check of the Gmail extension on live Gmail (a test cannot sign in to Gmail)",
+  "checked_by": "Kasim",
+  "date": "2026-11-11",
+  "extension_commit": "c90dc5d",
+  "result": "the PhishGuard banner appeared above opened emails",
+  "source": "Reported by Kasim in the build conversation; not an automated measurement. No email content was recorded."
+}

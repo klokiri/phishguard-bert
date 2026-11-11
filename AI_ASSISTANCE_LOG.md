@@ -120,4 +120,4 @@ The choice of sources (Nazario phishing corpus, SpamAssassin ham) was made by th
 | `scripts/make_report.py` (changes), `results/report_draft.md` | Report section 4 paragraph and scope note, generated from the test results | same |
 | `README.md`, `PROGRESS.md` | Install steps, commands, write-up | same |
 
-Kasim chose the type (a Chrome extension for Gmail) and the trigger (automatic checking when an email is opened). The design and the code were written by the AI assistant, which also chose the Gmail class names, sending link targets with the text, the per-email cache and the popup switch. The live Gmail check is left to Kasim, because the assistant does not sign in to accounts.
+Kasim chose the type (a Chrome extension for Gmail) and the trigger (automatic checking when an email is opened). The design and the code were written by the AI assistant, which also chose the Gmail class names, sending link targets with the text, the per-email cache and the popup switch. The live Gmail check was done by Kasim (the assistant does not sign in to accounts); he reported that it works (`results/extension_live_check.json`).

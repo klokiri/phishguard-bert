@@ -56,4 +56,4 @@ The extension asks Chrome for:
 
 `scripts/extension_test.mjs` loads the extension into a headless Chrome and opens `tests/extension/gmail_fixture.html`, a local page that copies the parts of Gmail's page structure that `content.js` reads. It also checks the popup and the automatic-checking switch, with the backend running and with it stopped. See that script's header for the commands. Results: `results/extension_test_online.json`, `results/extension_test_offline.json`.
 
-The test cannot sign in to Gmail, so check live Gmail by hand after installing.
+The test cannot sign in to Gmail, so live Gmail is checked by hand after installing. Kasim did this on 2026-11-11 and the banner appeared (`results/extension_live_check.json`).
