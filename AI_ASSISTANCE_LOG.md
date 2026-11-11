@@ -109,3 +109,15 @@ The original HTML (Kasim's app) is in the baseline commit `48e2bed`; the decisio
 | `NOTICE`, `README.md`, `PROGRESS.md`, `AI_ASSISTANCE_LOG.md` | CC BY 4.0 attribution, commands, write-up | same |
 
 The choice of sources (Nazario phishing corpus, SpamAssassin ham) was made by the AI assistant; Kasim asked for the OOD set to be built.
+
+## Gmail extension (2026-11-11, requested by Kasim)
+
+| File | What it is | Commit |
+|---|---|---|
+| `extension/manifest.json`, `background.js`, `content.js`, `popup.html`, `popup.js`, `README.md` | Chrome extension (Manifest V3) that checks opened Gmail emails with the local backend and shows the result in a banner | see `git log -- extension/` |
+| `scripts/make_extension_icons.py`, `extension/icons/*.png` | Toolbar icons (generated) | same |
+| `tests/extension/gmail_fixture.html`, `scripts/extension_test.mjs`, `results/extension_test_*.json` | Headless-Chrome test on a Gmail-like local page, backend running and stopped (results generated) | same |
+| `scripts/make_report.py` (changes), `results/report_draft.md` | Report section 4 paragraph and scope note, generated from the test results | same |
+| `README.md`, `PROGRESS.md` | Install steps, commands, write-up | same |
+
+Kasim chose the type (a Chrome extension for Gmail) and the trigger (automatic checking when an email is opened). The design and the code were written by the AI assistant, which also chose the Gmail class names, sending link targets with the text, the per-email cache and the popup switch. The live Gmail check is left to Kasim, because the assistant does not sign in to accounts.

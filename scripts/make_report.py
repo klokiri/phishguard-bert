@@ -177,6 +177,17 @@ def main() -> None:
         w(f"Backend tests: {coverage['tests']}; statement coverage of `backend/` "
           f"{coverage['total_percent']}% (lowest module {coverage['lowest_module_percent']}%), against the "
           f"NFR-09 target of {coverage['target_percent']:.0f}%.\n")
+    ext_on, ext_off = load("extension_test_online.json"), load("extension_test_offline.json")
+    w("A Chrome extension for Gmail (`extension/`, added after the proposal at Kasim's request) checks each email "
+      "when it is opened: it reads the sender, subject, body text and link targets, sends them only to the local "
+      "backend, and shows the verdict, phishing probability, fired indicators and occlusion words in a banner "
+      "above the message. A test cannot sign in to Gmail, so it was tested in headless Chrome on a local page "
+      "that copies the parts of Gmail's page structure the extension reads: "
+      + (f"{ext_on['passed']} of {ext_on['total']} checks passed with the backend running and "
+         f"{ext_off['passed']} of {ext_off['total']} with it stopped ({ext_on['chrome']})"
+         if ext_on and ext_off else NYM)
+      + ". A check on live Gmail has not been recorded. Gmail's page structure is not a public API, so the "
+        "extension can stop finding emails when Gmail changes it.\n")
 
     # ── Error analysis ──
     w("## 5. Error analysis (bert-base)\n")
@@ -289,7 +300,8 @@ def main() -> None:
     w("- **Scope versus the proposal.** Not implemented: user authentication and roles (FR-02, NFR-01), "
       "web-based model training (FR-04), TLS (NFR-02), immutable audit log (NFR-10), load testing (NFR-04 at 50 "
       "users), usability and accessibility studies (NFR-06, NFR-07), uptime monitoring (NFR-08), an OpenAPI "
-      "specification file (part of NFR-12), and SHAP explanations (occlusion is used instead).\n")
+      "specification file (part of NFR-12), and SHAP explanations (occlusion is used instead). Added beyond "
+      "the proposal: the out-of-distribution evaluation (section 5b) and the Gmail extension (section 4).\n")
 
     # ── Third-party work ──
     w("## 7. Use of third-party work\n")

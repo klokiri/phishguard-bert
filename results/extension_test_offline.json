@@ -1,0 +1,48 @@
+{
+  "scenario": "offline",
+  "chrome": "Chrome/157.0.8103.39",
+  "extensionLoaded": true,
+  "email1": {
+    "state": "error",
+    "verdict": null,
+    "shown": [
+      "PhishGuard AI",
+      "NOT CHECKED",
+      "The PhishGuard backend is not running. Start it with: .venv/bin/python -m backend.app",
+      "Retry",
+      "×"
+    ],
+    "explanation": null,
+    "placedAboveBody": true
+  },
+  "popupStatus": "Backend offline. In the project folder, start it with .venv/bin/python -m backend.app",
+  "checks": [
+    {
+      "check": "unmodified extension/ loads in Chrome",
+      "pass": true
+    },
+    {
+      "check": "no banner before an email is opened",
+      "pass": true
+    },
+    {
+      "check": "offline: banner says the backend is not running",
+      "pass": true
+    },
+    {
+      "check": "hidden message body is ignored",
+      "pass": true
+    },
+    {
+      "check": "popup shows the backend status",
+      "pass": true,
+      "detail": "Backend offline. In the project folder, start it with .venv/bin/python -m backend.app"
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "allPassed": true,
+  "git_commit": "4a2f58e+dirty",
+  "generated_at": "2026-11-11T00:53:47.399Z",
+  "command": "node scripts/extension_test.mjs offline"
+}

@@ -1,6 +1,6 @@
 # PhishGuard AI — BERT edition
 
-Final-year capstone by Kasim: an explainable phishing detector for emails and URLs, with a BERT model, classical baselines, a Flask backend and the PhishGuard AI web front end.
+Final-year capstone by Kasim: an explainable phishing detector for emails and URLs, with a BERT model, classical baselines, a Flask backend, the PhishGuard AI web front end and a Chrome extension for Gmail.
 
 **Results:** [results/figures/comparison_table.md](results/figures/comparison_table.md) compares all six models on one held-out test set, and the figures are in [results/figures/](results/figures/). [results/report_draft.md](results/report_draft.md) is a draft of the methods, results, error analysis and limitations, generated from the results files. This README deliberately contains no metric values: every number lives in, and is read from, `results/`.
 
@@ -64,6 +64,10 @@ and open http://localhost:8000/PhishGuard_AI.html. Log in with the pre-filled de
 .venv/bin/python scripts/export_frontend_results.py
 ```
 
+## Gmail extension
+
+`extension/` is a Chrome extension that checks each email you open in Gmail with the local BERT backend and shows the verdict, probability, warning signs and the words that moved the model in a banner above the message. To install it, start the backend, open `chrome://extensions`, switch on Developer mode, click **Load unpacked**, choose the `extension/` folder, and reload Gmail. The toolbar popup shows the backend status and turns automatic checking off and on. Email text is sent only to 127.0.0.1. Details, privacy and limitations: [extension/README.md](extension/README.md).
+
 ## Reproducing the results
 
 Every number comes from a file in `results/`, produced by one command:
@@ -90,6 +94,8 @@ Every number comes from a file in `results/`, produced by one command:
 | `results/figures/*` (table + 5 figures) | `.venv/bin/python scripts/make_figures.py` |
 | `results/report_draft.md` | `.venv/bin/python scripts/make_report.py` |
 | `frontend/model_results.js` | `.venv/bin/python scripts/export_frontend_results.py` |
+| `results/extension_test_online.json`, `results/extension_test_offline.json` (Node.js + Chrome; backend running / stopped) | `node scripts/extension_test.mjs online` and `node scripts/extension_test.mjs offline`; the steps are in the script's header |
+| `extension/icons/*.png` | `.venv/bin/python scripts/make_extension_icons.py` |
 
 Browser test of the page opened from disk (`file://`): see the header of `scripts/browser_test.mjs`.
 
@@ -103,10 +109,11 @@ Metric definitions: precision, recall and F1 are for the phishing class (binary)
 
 ```
 frontend/       PhishGuard_AI.html, bert_connector.js, model_results.js (generated)
+extension/      Chrome extension for Gmail (uses the local backend)
 backend/        Flask API: app.py, model_service.py, indicators.py, attribution.py, explain.py
 src/            data.py (split), evaluate.py (shared metrics), features.py (from reference), models/
-tests/          pytest tests
-scripts/        environment check, training, evaluation, figures, report, browser test
+tests/          pytest tests; extension/ holds the Gmail-like test page
+scripts/        environment check, training, evaluation, figures, report, browser and extension tests
 results/        committed evidence: split manifest, metrics, predictions, figures, report draft
 docs/           project proposal
 third_party/    Apache-2.0 licence of the reference project
@@ -126,7 +133,8 @@ Each phase ends with an annotated tag. Check one out with `git checkout <tag>`.
 | `phase-5-backend` | 2026-11-09 | `2b19147` | Config, ModelService, data-derived indicators, occlusion attribution, tests, coverage |
 | `phase-6-frontend` | 2026-11-10 | `f4e46aa` | Web app connected to the BERT backend with fallback; invented metrics removed |
 | `phase-7-report` | 2026-11-10 | `d16ba66` | Figures, scheme-artefact test, error analysis, report draft, scaffold removed |
-| `ood-eval` | 2026-11-11 | (latest) | Out-of-distribution email test set (Nazario phishing 2023–24, SpamAssassin ham) for all six models |
+| `ood-eval` | 2026-11-11 | `4a2f58e` | Out-of-distribution email test set (Nazario phishing 2023–24, SpamAssassin ham) for all six models |
+| `gmail-extension` | 2026-11-11 | (latest) | Chrome extension that checks opened Gmail emails with the local backend; headless-Chrome test |
 
 ## Third-party work
 

@@ -1,0 +1,136 @@
+{
+  "scenario": "online",
+  "chrome": "Chrome/157.0.8103.39",
+  "extensionLoaded": true,
+  "email1": {
+    "state": "done",
+    "verdict": "phishing",
+    "shown": [
+      "PhishGuard AI",
+      "PHISHING",
+      "Phishing probability >99.9% · model phishguard-bert-base",
+      "×",
+      "Likely phishing. Do not click links, open attachments or reply until you have checked the sender another way.",
+      "Warning signs (rule checks):Generic greeting (dear customer); Request for credentials or payment details (verify your account); Urgency language (suspended, within 24 hours)",
+      "Words that moved the model:paypal +0.09paypa1 -0.07from -0.06thank -0.06account -0.06",
+      "Why?"
+    ],
+    "explanation": "The phishguard-bert-base model (bert) estimates a >99.9% probability that this email is phishing, so it is shown as phishing. Rule-based checks found these warning signs: Generic greeting (dear customer); Request for credentials or payment details (verify your account); Urgency language (suspended, within 24 hours). Signs more common in legitimate messages: Contains an email address; Contains a link. Removing these words lowered the model's phishing score the most: 'paypal'. Removing these words raised it: 'paypa1', 'from'. The rule-based checks are separate from the model; the word list comes from the model itself.",
+    "placedAboveBody": true
+  },
+  "email2": {
+    "state": "done",
+    "verdict": "legitimate",
+    "shown": [
+      "PhishGuard AI",
+      "NO PHISHING DETECTED",
+      "Phishing probability <0.1% · model phishguard-bert-base",
+      "×",
+      "The model did not find this email phishing-like. This is an estimate, not a guarantee.",
+      "Words that moved the model:university -0.20thursday -0.16page -0.12transformer -0.10module -0.09",
+      "Why?"
+    ],
+    "explanation": "The phishguard-bert-base model (bert) estimates a <0.1% probability that this email is phishing, so it is shown as legitimate. None of the rule-based warning-sign checks fired. Signs more common in legitimate messages: Contains an email address; Contains a link. Removing these words raised it: 'university', 'thursday'. The rule-based checks are separate from the model; the word list comes from the model itself.",
+    "placedAboveBody": true
+  },
+  "email1Again": {
+    "state": "done",
+    "verdict": "phishing",
+    "shown": [
+      "PhishGuard AI",
+      "PHISHING",
+      "Phishing probability >99.9% · model phishguard-bert-base",
+      "×",
+      "Likely phishing. Do not click links, open attachments or reply until you have checked the sender another way.",
+      "Warning signs (rule checks):Generic greeting (dear customer); Request for credentials or payment details (verify your account); Urgency language (suspended, within 24 hours)",
+      "Words that moved the model:paypal +0.09paypa1 -0.07from -0.06thank -0.06account -0.06",
+      "Why?"
+    ],
+    "explanation": "The phishguard-bert-base model (bert) estimates a >99.9% probability that this email is phishing, so it is shown as phishing. Rule-based checks found these warning signs: Generic greeting (dear customer); Request for credentials or payment details (verify your account); Urgency language (suspended, within 24 hours). Signs more common in legitimate messages: Contains an email address; Contains a link. Removing these words lowered the model's phishing score the most: 'paypal'. Removing these words raised it: 'paypa1', 'from'. The rule-based checks are separate from the model; the word list comes from the model itself.",
+    "placedAboveBody": true
+  },
+  "backendChecks": {
+    "firstTwoEmails": 2,
+    "reopeningEmail1": 0
+  },
+  "popupStatus": "Backend online · phishguard-bert-base · MPS",
+  "email3Idle": {
+    "state": "idle",
+    "verdict": null,
+    "shown": [
+      "PhishGuard AI",
+      "Check this email",
+      "Automatic checking is off (toolbar popup).",
+      "×"
+    ],
+    "explanation": null,
+    "placedAboveBody": true
+  },
+  "email3AfterClick": {
+    "state": "done",
+    "verdict": "legitimate",
+    "shown": [
+      "PhishGuard AI",
+      "NO PHISHING DETECTED",
+      "Phishing probability <0.1% · model phishguard-bert-base",
+      "×",
+      "The model did not find this email phishing-like. This is an estimate, not a guarantee.",
+      "Why?"
+    ],
+    "explanation": "The phishguard-bert-base model (bert) estimates a <0.1% probability that this email is phishing, so it is shown as legitimate. None of the rule-based warning-sign checks fired. Signs more common in legitimate messages: Contains an email address. The rule-based checks are separate from the model; the word list comes from the model itself.",
+    "placedAboveBody": true
+  },
+  "checks": [
+    {
+      "check": "unmodified extension/ loads in Chrome",
+      "pass": true
+    },
+    {
+      "check": "no banner before an email is opened",
+      "pass": true
+    },
+    {
+      "check": "email 1: result shown above the message body",
+      "pass": true
+    },
+    {
+      "check": "email 2: result shown",
+      "pass": true
+    },
+    {
+      "check": "reopened email shows the same verdict",
+      "pass": true
+    },
+    {
+      "check": "each email sent to the backend once; reopening uses the saved answer",
+      "pass": true,
+      "detail": {
+        "firstTwoEmails": 2,
+        "reopeningEmail1": 0
+      }
+    },
+    {
+      "check": "hidden message body is ignored",
+      "pass": true
+    },
+    {
+      "check": "popup shows the backend status",
+      "pass": true,
+      "detail": "Backend online · phishguard-bert-base · MPS"
+    },
+    {
+      "check": "auto-check off: button shown, nothing sent",
+      "pass": true
+    },
+    {
+      "check": "auto-check off: clicking \"Check this email\" shows a result",
+      "pass": true
+    }
+  ],
+  "passed": 10,
+  "total": 10,
+  "allPassed": true,
+  "git_commit": "4a2f58e+dirty",
+  "generated_at": "2026-11-11T00:53:34.465Z",
+  "command": "node scripts/extension_test.mjs online"
+}

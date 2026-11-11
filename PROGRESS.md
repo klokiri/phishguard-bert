@@ -433,6 +433,24 @@ Run: `.venv/bin/python -m backend.app` (BERT; `PHISHGUARD_MODEL=heuristic` or `c
 
 ---
 
+## Gmail extension (2026-11-11, at Kasim's request)
+
+- **Scope:** an addition beyond the proposal, which names no extension. Kasim chose a Chrome extension for Gmail that checks each email **automatically when it is opened**. A switch in the toolbar popup changes this to on-click.
+- **Design** (`extension/`, Manifest V3, no backend changes):
+  - `content.js` finds opened emails by Gmail's class names. It reads the sender, subject, displayed body and link targets, and shows the result in a banner (shadow DOM, text written with `textContent` only).
+  - `background.js` is the only part that uses the network. It posts to the fixed address `http://127.0.0.1:5000/api/v1/analyse`; the Gmail page itself can't call `http://127.0.0.1` (mixed content).
+  - Each email is sent once per page load (cached by SHA-256 of its text). Errors are not cached, and the banner offers Retry.
+  - Permissions: `storage`, the backend address, and a content script on `mail.google.com`.
+- **Test** (`scripts/extension_test.mjs`): loads the extension into headless Chrome and drives `tests/extension/gmail_fixture.html`, a local page that copies the parts of Gmail's page structure that `content.js` reads. The test copy of the manifest adds only the fixture's address; the unmodified `extension/` is loaded too, to check its manifest. The backend ran with a scratch database, so test checks did not go into `data/analyses.db`. Results: `results/extension_test_online.json` (backend running) and `results/extension_test_offline.json` (backend stopped). All checks passed in both.
+- **Not yet verified: live Gmail.** A test cannot sign in to Gmail, so Kasim should install the extension (`extension/README.md`), open a few emails, and check that the banner appears. If it doesn't, Gmail's class names have probably changed (`GMAIL` at the top of `content.js`).
+- **Known limits** (also in `extension/README.md`):
+  - It depends on Gmail's undocumented page structure.
+  - The sender line makes the "Contains an email address" indicator fire for every email.
+  - Appended link addresses can fall beyond BERT's 512 tokens in a long email.
+  - The backend's 100 checks per hour also applies here.
+
+---
+
 ## 7-day schedule (realistic for an M4 Pro on MPS)
 
 | Day | Date | Work | Done when |

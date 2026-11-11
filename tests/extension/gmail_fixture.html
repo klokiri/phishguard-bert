@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Gmail-like test page (PhishGuard extension test)</title>
+  <style>
+    body { font: 14px Arial, sans-serif; margin: 0; background: #f6f8fc; color: #202124; }
+    #view { max-width: 760px; margin: 24px auto; background: #fff; padding: 20px 24px; border-radius: 12px; }
+    h2.hP { font-size: 22px; font-weight: 400; margin: 0 0 16px; }
+    .gD { font-weight: 700; }
+    .addr { color: #5f6368; }
+    .ii.gt { margin-top: 14px; }
+  </style>
+</head>
+<body>
+  <!--
+    Test fixture for scripts/extension_test.mjs. It copies only the parts of
+    Gmail's page structure that extension/content.js reads (class names h2.hP,
+    div.adn, span.gD[email], div.a3s). openEmail(n) replaces the view the way
+    Gmail does when you open an email without reloading the page. All emails
+    here are made up for testing; no address or link in them is contacted.
+  -->
+  <div id="view"></div>
+
+  <!-- A message body that is in the page but hidden (Gmail keeps old views
+       around like this). The extension must ignore it. -->
+  <div style="display:none"><div class="adn"><div class="a3s aiL" id="hidden-body">Hidden older message.</div></div></div>
+
+  <script>
+    const EMAILS = {
+      1: { subject: 'Your account has been limited',
+           name: 'PayPal Service', email: 'service@paypa1-account-verify.tk',
+           html: '<p>Dear Customer,</p><p>We noticed unusual activity and your account access has been limited. ' +
+                 'To restore full access you must verify your identity within 24 hours, otherwise your account ' +
+                 'will be permanently suspended.</p><p><a href="http://paypa1-account-verify.tk/login/confirm.php">' +
+                 'Verify your account now</a></p><p>Thank you,<br>PayPal Security Team</p>' },
+      2: { subject: 'Week 6 lecture slides and lab sheet',
+           name: 'Module Team', email: 'module-team@university.example',
+           html: '<p>Hi all,</p><p>The slides for this week\'s lecture on transformer models and the lab sheet are ' +
+                 'now on the module page. The lab on Thursday will go through fine-tuning a small model; bring ' +
+                 'your laptop if you can.</p><p><a href="https://learn.university.example/course/view.php?id=42">' +
+                 'Module page</a></p><p>Best wishes,<br>Module Team</p>' },
+      3: { subject: 'Minutes from Tuesday\'s project meeting',
+           name: 'Sam Lee', email: 'sam.lee@university.example',
+           html: '<p>Hi,</p><p>Attached are the minutes from Tuesday. Actions: finish the evaluation chapter, ' +
+                 'send the draft to the supervisor by Friday, and book a room for the demo.</p><p>Thanks,<br>Sam</p>' },
+    };
+
+    // Builds the view with DOM methods, like Gmail's own markup (class names only).
+    function openEmail(n) {
+      const e = EMAILS[n];
+      const view = document.getElementById('view');
+      view.replaceChildren();
+      const subject = document.createElement('h2');
+      subject.className = 'hP';
+      subject.textContent = e.subject;
+      const message = document.createElement('div');
+      message.className = 'adn ads';
+      const from = document.createElement('div');
+      const sender = document.createElement('span');
+      sender.className = 'gD';
+      sender.setAttribute('email', e.email);
+      sender.setAttribute('name', e.name);
+      sender.textContent = e.name;
+      const addr = document.createElement('span');
+      addr.className = 'addr';
+      addr.textContent = ` <${e.email}>`;
+      from.append(sender, addr);
+      const wrap = document.createElement('div');
+      wrap.className = 'ii gt';
+      const body = document.createElement('div');
+      body.className = 'a3s aiL';
+      body.innerHTML = e.html; // the fixture's own static test HTML
+      wrap.appendChild(body);
+      message.append(from, wrap);
+      view.append(subject, message);
+    }
+  </script>
+</body>
+</html>

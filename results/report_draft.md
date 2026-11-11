@@ -67,6 +67,8 @@ The original app's heuristic was ported to Python; on all 15,466 test rows the p
 
 Backend tests: 63 passed in 8.90s; statement coverage of `backend/` 97.2% (lowest module 95.7%), against the NFR-09 target of 80%.
 
+A Chrome extension for Gmail (`extension/`, added after the proposal at Kasim's request) checks each email when it is opened: it reads the sender, subject, body text and link targets, sends them only to the local backend, and shows the verdict, phishing probability, fired indicators and occlusion words in a banner above the message. A test cannot sign in to Gmail, so it was tested in headless Chrome on a local page that copies the parts of Gmail's page structure the extension reads: 10 of 10 checks passed with the backend running and 5 of 5 with it stopped (Chrome/157.0.8103.39). A check on live Gmail has not been recorded. Gmail's page structure is not a public API, so the extension can stop finding emails when Gmail changes it.
+
 ## 5. Error analysis (bert-base)
 
 False positives: 238 (HTML 123, email/SMS 20, URL 95); 123 of them are also misclassified by the published bert-large. False negatives: 295 (HTML 118, email/SMS 33, URL 144); 146 shared with bert-large. Examples: 10 of each drawn with pandas .sample(random_state=42). Notes are the assistant's reading of each example, for review.
@@ -136,7 +138,7 @@ On these emails Kasim's bert-base catches 81.3% of phishing (test set: 95.5%) an
 - **English only.** The data and models are English; other languages were not tested.
 - **Truncation.** BERT reads at most 512 tokens; only 8.6% of training HTML pages fit. Weakest sample type by F1: bert-base, fine-tuned (Kasim): html; bert-large, published model (E. Alvarado) †: html.
 - **Single training run.** One seed; GPU training on Apple MPS is not bit-for-bit deterministic, so re-runs give close but not identical numbers. The best checkpoint was the last one evaluated, so longer training might help; this was not tested, to avoid tuning on the test set.
-- **Scope versus the proposal.** Not implemented: user authentication and roles (FR-02, NFR-01), web-based model training (FR-04), TLS (NFR-02), immutable audit log (NFR-10), load testing (NFR-04 at 50 users), usability and accessibility studies (NFR-06, NFR-07), uptime monitoring (NFR-08), an OpenAPI specification file (part of NFR-12), and SHAP explanations (occlusion is used instead).
+- **Scope versus the proposal.** Not implemented: user authentication and roles (FR-02, NFR-01), web-based model training (FR-04), TLS (NFR-02), immutable audit log (NFR-10), load testing (NFR-04 at 50 users), usability and accessibility studies (NFR-06, NFR-07), uptime monitoring (NFR-08), an OpenAPI specification file (part of NFR-12), and SHAP explanations (occlusion is used instead). Added beyond the proposal: the out-of-distribution evaluation (section 5b) and the Gmail extension (section 4).
 
 ## 7. Use of third-party work
 
